@@ -34,6 +34,12 @@ import '@patternfly/patternfly/patternfly-addons.css';
 const BOT = 'ai';
 const USER = 'human';
 
+// Maximum number of characters from user query to send to server.
+const MAX_MSG_SIZE = 2048;
+
+// Maximum number of previous messages to send to server.
+const MAX_PREV_SIZE = 20;
+
 const Conversation = ({ conversation }) => {
   return conversation.map((conversationEntry, index) => {
     if (conversationEntry.sender === USER) {
@@ -93,7 +99,7 @@ export const AISearchComponent = () => {
       conversation[conversation.length - 1].sender === USER &&
       !loading
     ) {
-      sendUserQuery(1, conversation[conversation.length - 1].text);
+      sendUserQuery(1, conversation[conversation.length - 1].text.substring(0, MAX_MSG_SIZE));
     }
   }, [conversation]);
 
@@ -200,7 +206,7 @@ export const AISearchComponent = () => {
     // This is because the last message is the one that the user just sent
     // and the server gets mad if the previous messages aren't exactly
     // alternating between user and bot
-    return conversation.slice(0, conversation.length - 1);
+    return conversation.slice(conversation.length >= MAX_PREV_SIZE ? conversation.length - MAX_PREV_SIZE : 0, conversation.length - 1);
   };
 
   const sendQueryToServer = async (_agentId: number, userQuery: any) => {
