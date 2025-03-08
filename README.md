@@ -1,9 +1,10 @@
-# 🍊 Tangerine
+# Convo AI Search Assistant Plugin
+
 This is a frontend plugin that provides a conversational AI search interface that talks to [Tangerine](https://github.com/RedHatInsights/tangerine-backend).
 
 ## Development
 Before starting:
-* Make sure you are using Node 20.17 or higher
+* Make sure you are using Node 18
 * Run `yarn install`
 * You'll need the URL for your tangerine server as well as the OAuth token exported as environment variables:
 
@@ -59,8 +60,3 @@ Add this to the dynmaic plugins config file
 
 Run `./build` - the packed tarball for the release along with its integrity sha will be generated.
 
-# Attributions
-
-This project uses graphics from Twemoji, licensed under Creative Commons Attribution 4.0 International (CC-BY 4.0).
-Twemoji graphics © 2014-2024 Twitter, Inc and other contributors.
-The original source can be found here: https://github.com/twitter/twemoji.
