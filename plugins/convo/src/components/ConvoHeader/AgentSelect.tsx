@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { ChatbotHeaderSelectorDropdown } from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
 import { DropdownItem, DropdownList } from '@patternfly/react-core';
-import { humanizeAgentName } from '../../lib/helpers';
+import { humanizeAssistantName } from '../../lib/helpers';
 
-export const AgentSelect: React.FC<{
-  agents: any[];
-  onAgentSelect: (agent: any) => void;
-  selectedAgent: any;
+export const AssistantSelect: React.FC<{
+  assistants: any[];
+  onAssistantSelect: (assistant: any) => void;
+  selectedAssistant: any;
   className: string;
-}> = ({ agents, onAgentSelect, selectedAgent, className }) => {
-  const [agentsCount, setAgentsCount] = useState(agents.length);
+}> = ({ assistants, onAssistantSelect, selectedAssistant, className }) => {
+  const [assistantsCount, setAssistantsCount] = useState(assistants.length);
 
   useEffect(() => {
-    setAgentsCount(agents.length);
-  }, [agents]);
+    setAssistantsCount(assistants.length);
+  }, [assistants]);
 
-  if (agentsCount === 0) {
+  if (assistantsCount === 0) {
     return null;
   }
 
@@ -24,16 +24,16 @@ export const AgentSelect: React.FC<{
   return (
     <div className={className}>
       <ChatbotHeaderSelectorDropdown
-        value={humanizeAgentName(selectedAgent.agent_name)}
+        value={humanizeAssistantName(selectedAssistant.assistant_name)}
         onSelect={(_event, selection) => {
-          const agent = agents.find((agent: any) => agent.id === selection);
-          onAgentSelect(agent);
+          const assistant = assistants.find((assistant: any) => assistant.id === selection);
+          onAssistantSelect(assistant);
         }}
       >
         <DropdownList className={className}>
-          {agents.map((agent, _index) => (
-            <DropdownItem value={agent.id} key={agent.id}>
-              {humanizeAgentName(agent.agent_name)}
+          {assistants.map((assistant, _index) => (
+            <DropdownItem value={assistant.id} key={assistant.id}>
+              {humanizeAssistantName(assistant.assistant_name)}
             </DropdownItem>
           ))}
         </DropdownList>

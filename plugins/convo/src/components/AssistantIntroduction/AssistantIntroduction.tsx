@@ -1,23 +1,23 @@
 import React from 'react';
 import { sendUserQuery } from '../../lib/api';
-import { getAgentIntroductionPrompt } from '../../lib/agentIntroductionPrompt';
+import { getAssistantIntroductionPrompt } from '../../lib/assistantIntroductionPrompt';
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import ConvoAvatar from '../../../static/robot.svg';
-import { humanizeAgentName } from '../../lib/helpers';
+import { humanizeAssistantName } from '../../lib/helpers';
 
-const AgentIntroductionMessage: React.FC<{
+const AssistantIntroductionMessage: React.FC<{
   text: string;
-  agent: any;
+  assistant: any;
   loading: boolean;
   show: boolean;
-}> = ({ text, agent, loading, show }) => {
+}> = ({ text, assistant, loading, show }) => {
   if (!show) {
     return null;
   }
   return (
     <Message
       key={text}
-      name={`${humanizeAgentName(agent.agent_name)} Assistant`}
+      name={`${humanizeAssistantName(assistant.assistant_name)} Assistant`}
       role="bot"
       content={text}
       avatar={ConvoAvatar}
@@ -27,14 +27,14 @@ const AgentIntroductionMessage: React.FC<{
   );
 };
 
-export const AgentIntroduction: React.FC<{
-  agent: any;
+export const AssistantIntroduction: React.FC<{
+  assistant: any;
   backendUrl: string;
-  agentHasBeenSelected: boolean;
+  assistantHasBeenSelected: boolean;
   show: boolean;
   sessionId: string;
   abortControllerRef: React.MutableRefObject<AbortController>;
-}> = ({ agent, backendUrl, agentHasBeenSelected, show, sessionId, abortControllerRef }) => {
+}> = ({ assistant, backendUrl, assistantHasBeenSelected, show, sessionId, abortControllerRef }) => {
   const [llmResponse, setLlmResponse] = React.useState<string>('👋');
   const [loading, setLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<boolean>(false);
@@ -50,21 +50,21 @@ export const AgentIntroduction: React.FC<{
   };
 
   React.useEffect(() => {
-    if (!agentHasBeenSelected) {
+    if (!assistantHasBeenSelected) {
       return;
     }
     setLlmResponse('👋');
-    handleAgentIntroduction();
-  }, [agent]);
+    handleAssistantIntroduction();
+  }, [assistant]);
 
 
-  const handleAgentIntroduction = async () => {
+  const handleAssistantIntroduction = async () => {
     setError(false);
     try {
       await sendUserQuery(
         backendUrl,
-        agent.id,
-        getAgentIntroductionPrompt(agent.agent_name),
+        assistant.id,
+        getAssistantIntroductionPrompt(assistant.assistant_name),
         [],
         setLoading,
         noop,
@@ -75,7 +75,7 @@ export const AgentIntroduction: React.FC<{
         abortControllerRef.current.signal
       );
     } catch (error) {
-      console.error('Error fetching agent introduction:', error);
+      console.error('Error fetching assistant introduction:', error);
       setError(true);
     }
   };
@@ -89,9 +89,9 @@ export const AgentIntroduction: React.FC<{
   }
 
   return (
-    <AgentIntroductionMessage
+    <AssistantIntroductionMessage
       text={llmResponse}
-      agent={agent}
+      assistant={assistant}
       loading={loading}
       show={show}
     />
