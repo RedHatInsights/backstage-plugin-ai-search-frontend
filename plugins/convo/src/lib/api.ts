@@ -38,10 +38,10 @@ export const sendFeedback = (
     });
 };
 
-export const getAgents = (
+export const getAssistants = (
   backendUrl: string,
-  setAgents: (data: any) => void,
-  setSelectedAgent: (id: string) => void,
+  setAssistants: (data: any) => void,
+  setSelectedAssistant: (id: string) => void,
   setError: (error: boolean) => void,
   setLoading: (loading: boolean) => void,
   setResponseIsStreaming: (streaming: boolean) => void,
@@ -50,34 +50,34 @@ export const getAgents = (
     headers: { 'Content-Type': 'application/json' },
   };
 
-  fetch(`${backendUrl}/api/proxy/tangerine/api/agents`, requestOptions)
+  fetch(`${backendUrl}/api/proxy/tangerine/api/assistants`, requestOptions)
     .then(response => response.json())
     .then(response => {
-      setAgents(
-        response.data.sort((a, b) => a.agent_name.localeCompare(b.agent_name)),
+      setAssistants(
+        response.data.sort((a, b) => a.assistant_name.localeCompare(b.assistant_name)),
       );
-      // HACK: Look for an agent named "'inscope-all-docs-agent'" and select it by default
-      // if it isn't there just use the first agent
-      const allDocsAgent = response.data.find(
-        agent => agent.agent_name === 'inscope-all-docs-agent',
+      // HACK: Look for an assistant named "'inscope-all-docs-assistant'" and select it by default
+      // if it isn't there just use the first assistant
+      const allDocsAssistant = response.data.find(
+        assistant => assistant.assistant_name === 'inscope-all-docs-assistant',
       );
-      if (allDocsAgent) {
-        setSelectedAgent(allDocsAgent);
+      if (allDocsAssistant) {
+        setSelectedAssistant(allDocsAssistant);
       } else {
-        setSelectedAgent(response.data[0]);
+        setSelectedAssistant(response.data[0]);
       }
     })
     .catch(_error => {
       setError(true);
       setLoading(false);
       setResponseIsStreaming(false);
-      console.error(`Error fetching agents from backend`);
+      console.error(`Error fetching assistants from backend`);
     });
 };
 
 export const sendUserQuery = async (
   backendUrl: string,
-  agentId: number,
+  assistantId: number,
   userQuery: any,
   previousMessages: any,
   setLoading: (loading: boolean) => void,
@@ -96,7 +96,7 @@ export const sendUserQuery = async (
     if (userQuery === '') return;
 
     const response = await sendQueryToServer(
-      agentId,
+      assistantId,
       userQuery,
       backendUrl,
       previousMessages,
@@ -119,7 +119,7 @@ export const sendUserQuery = async (
 
 // Private functions
 const sendQueryToServer = async (
-  agentId: any,
+  assistantId: any,
   userQuery: any,
   backendUrl: string,
   previousMessages: string,
@@ -128,7 +128,7 @@ const sendQueryToServer = async (
 ) => {
   try {
     const response = await fetch(
-      `${backendUrl}/api/proxy/tangerine/api/agents/${agentId}/chat`,
+      `${backendUrl}/api/proxy/tangerine/api/assistants/${assistantId}/chat`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

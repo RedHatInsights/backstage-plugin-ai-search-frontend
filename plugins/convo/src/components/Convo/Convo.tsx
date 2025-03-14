@@ -13,11 +13,11 @@ import { ConvoFooter } from '../ConvoFooter/ConvoFooter';
 import { ConvoHeader } from '../ConvoHeader/ConvoHeader';
 import { Conversation } from '../Conversation/Conversation';
 import { WelcomeMessages } from '../WelcomeMessages/WelcomeMessages';
-import { AgentIntroduction } from '../AgentIntroduction/AgentIntroduction';
-import { humanizeAgentName } from '../../lib/helpers';
+import { AssistantIntroduction } from '../AssistantIntroduction/AssistantIntroduction';
+import { humanizeAssistantName } from '../../lib/helpers';
 
 import { customStyles } from '../../lib/styles';
-import { getAgents, sendUserQuery } from '../../lib/api';
+import { getAssistants, sendUserQuery } from '../../lib/api';
 
 // Style imports needed for the virtual assistant component
 import '@patternfly/react-core/dist/styles/base.css';
@@ -41,14 +41,14 @@ export const Convo = () => {
   const [conversation, setConversation] = useState([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
-  const [agents, setAgents] = useState<any>([]);
-  const [selectedAgent, setSelectedAgent] = useState<any>({});
+  const [assistants, setAssistants] = useState<any>([]);
+  const [selectedAssistant, setSelectedAssistant] = useState<any>({});
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-  const [agentHasBeenSelected, setAgentHasBeenSelected] =
+  const [assistantHasBeenSelected, setAssistantHasBeenSelected] =
     useState<boolean>(false);
   const [responseIsStreaming, setResponseIsStreaming] =
     useState<boolean>(false);
-  const [showAgentIntroduction, setShowAgentIntroduction] =
+  const [showAssistantIntroduction, setShowAssistantIntroduction] =
     useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>(crypto.randomUUID());
   const abortControllerRef = useRef(new AbortController());
@@ -84,18 +84,18 @@ export const Convo = () => {
   }, [isDarkMode]);
 
   useEffect(() => {
-    if (agents.length !== 0) {
+    if (assistants.length !== 0) {
       return;
     }
-    getAgents(
+    getAssistants(
       backendUrl,
-      setAgents,
-      setSelectedAgent,
+      setAssistants,
+      setSelectedAssistant,
       setError,
       setLoading,
       setResponseIsStreaming,
     );
-  }, [agents]);
+  }, [assistants]);
 
   // Whenever the conversation changes,
   // If the last message in the conversation is from the user and the bot is not typing, send the user query
@@ -110,7 +110,7 @@ export const Convo = () => {
       try {
         sendUserQuery(
           backendUrl,
-          selectedAgent.id,
+          selectedAssistant.id,
           lastMessage.text,
           previousMessages,
           setLoading,
@@ -224,15 +224,15 @@ export const Convo = () => {
     abortControllerRef.current = new AbortController();
   };
 
-  const agentSelectionHandler = (agent: any) => {
+  const assistantSelectionHandler = (assistant: any) => {
     recycleAbortController();
-    setSelectedAgent(agent);
+    setSelectedAssistant(assistant);
     setConversation([]);
     setError(false);
     setLoading(false);
     setResponseIsStreaming(false);
-    setAgentHasBeenSelected(true);
-    setShowAgentIntroduction(true);
+    setAssistantHasBeenSelected(true);
+    setShowAssistantIntroduction(true);
     setSessionId(crypto.randomUUID());
   };
 
@@ -242,7 +242,7 @@ export const Convo = () => {
     setError(false);
     setLoading(false);
     setResponseIsStreaming(false);
-    setShowAgentIntroduction(false);
+    setShowAssistantIntroduction(false);
     setSessionId(crypto.randomUUID());
   };
 
@@ -250,7 +250,7 @@ export const Convo = () => {
     if (loading) {
       return (
         <Message
-          name={humanizeAgentName(selectedAgent.agent_name)}
+          name={humanizeAssistantName(selectedAssistant.assistant_name)}
           role="bot"
           avatar={ConvoAvatar}
           timestamp=" "
@@ -266,10 +266,10 @@ export const Convo = () => {
       <Content className={classes.container}>
         <Chatbot displayMode={ChatbotDisplayMode.embedded}>
           <ConvoHeader
-            onAgentSelect={agentSelectionHandler}
+            onAssistantSelect={assistantSelectionHandler}
             onNewChatClick={handleNewChatClick}
-            agents={agents}
-            selectedAgent={selectedAgent}
+            assistants={assistants}
+            selectedAssistant={selectedAssistant}
             loading={loading}
           />
           <MessageBox
@@ -278,18 +278,18 @@ export const Convo = () => {
             announcement="Type your message and hit enter to send"
           >
             <WelcomeMessages
-              show={!agentHasBeenSelected}
+              show={!assistantHasBeenSelected}
               sendMessageHandler={sendMessageHandler}
             />
-            <AgentIntroduction
-              agent={selectedAgent}
+            <AssistantIntroduction
+              assistant={selectedAssistant}
               backendUrl={backendUrl}
-              agentHasBeenSelected={agentHasBeenSelected}
-              show={showAgentIntroduction}
+              assistantHasBeenSelected={assistantHasBeenSelected}
+              show={showAssistantIntroduction}
               sessionId={sessionId}
               abortControllerRef={abortControllerRef}
             />
-            <Conversation conversation={conversation} agent={selectedAgent} />
+            <Conversation conversation={conversation} assistant={selectedAssistant} />
             <ShowLoadingMessage />
             <ShowErrorMessage />
           </MessageBox>
