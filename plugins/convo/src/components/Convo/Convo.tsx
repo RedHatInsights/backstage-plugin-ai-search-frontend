@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useApi, configApiRef } from '@backstage/core-plugin-api';
+import { useApi, fetchApiRef, configApiRef } from '@backstage/core-plugin-api';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import { Content, Page } from '@backstage/core-components';
 import Chatbot, {
@@ -53,6 +53,8 @@ export const Convo = () => {
   const [sessionId, setSessionId] = useState<string>(crypto.randomUUID());
   const abortControllerRef = useRef(new AbortController());
 
+  const fetchApi = useApi(fetchApiRef);
+
   useEffect(() => {
     const handleLinkClick = event => {
       const link = event.target.closest('a'); // Matches any <a> element
@@ -89,6 +91,7 @@ export const Convo = () => {
     }
     getAgents(
       backendUrl,
+      fetchApi.fetch,
       setAgents,
       setSelectedAgent,
       setError,
@@ -110,6 +113,7 @@ export const Convo = () => {
       try {
         sendUserQuery(
           backendUrl,
+          fetchApi.fetch,
           selectedAgent.id,
           lastMessage.text,
           previousMessages,
