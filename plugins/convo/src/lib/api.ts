@@ -1,4 +1,7 @@
+import { fetchApiRef, useApi } from "@backstage/core-plugin-api";
+
 const CLIENT = 'convo';
+const fetchApi = useApi(fetchApiRef);
 
 // Public functions
 
@@ -17,7 +20,7 @@ export const sendFeedback = (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(feedbackOpts),
   };
-  fetch(`${backendUrl}/api/proxy/tangerine/api/feedback`, requestOptions)
+  fetchApi.fetch(`${backendUrl}/api/proxy/tangerine/api/feedback`, requestOptions)
     .then(response => {
       if (!response.ok) {
         throw new Error(
@@ -50,7 +53,7 @@ export const getAgents = (
     headers: { 'Content-Type': 'application/json' },
   };
 
-  fetch(`${backendUrl}/api/proxy/tangerine/api/agents`, requestOptions)
+  fetchApi.fetch(`${backendUrl}/api/proxy/tangerine/api/agents`, requestOptions)
     .then(response => response.json())
     .then(response => {
       setAgents(
@@ -127,7 +130,7 @@ const sendQueryToServer = async (
   abortSignal: AbortSignal,
 ) => {
   try {
-    const response = await fetch(
+    const response = await fetchApi.fetch(
       `${backendUrl}/api/proxy/tangerine/api/agents/${agentId}/chat`,
       {
         method: 'POST',
