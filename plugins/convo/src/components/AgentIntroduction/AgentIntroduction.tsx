@@ -4,6 +4,7 @@ import { getAgentIntroductionPrompt } from '../../lib/agentIntroductionPrompt';
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import ConvoAvatar from '../../../static/robot.svg';
 import { humanizeAgentName } from '../../lib/helpers';
+import { fetchApiRef, useApi } from '@backstage/core-plugin-api';
 
 const AgentIntroductionMessage: React.FC<{
   text: string;
@@ -38,6 +39,7 @@ export const AgentIntroduction: React.FC<{
   const [llmResponse, setLlmResponse] = React.useState<string>('👋');
   const [loading, setLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<boolean>(false);
+  const fetchApi = useApi(fetchApiRef);
   
 
   const noop = () => {};
@@ -63,6 +65,7 @@ export const AgentIntroduction: React.FC<{
     try {
       await sendUserQuery(
         backendUrl,
+        fetchApi.fetch,
         agent.id,
         getAgentIntroductionPrompt(agent.agent_name),
         [],
