@@ -24,7 +24,7 @@ export const AssistantSelect: React.FC<{
   return (
     <div className={className}>
       <ChatbotHeaderSelectorDropdown
-        value={humanizeAssistantName(selectedAssistant.assistant_name)}
+        value={humanizeAssistantName(selectedAssistant.name)}
         onSelect={(_event, selection) => {
           const assistant = assistants.find((assistant: any) => assistant.id === selection);
           onAssistantSelect(assistant);
@@ -33,7 +33,7 @@ export const AssistantSelect: React.FC<{
         <DropdownList className={className}>
           {assistants.map((assistant, _index) => (
             <DropdownItem value={assistant.id} key={assistant.id}>
-              {humanizeAssistantName(assistant.assistant_name)}
+              {humanizeAssistantName(assistant.name)}
             </DropdownItem>
           ))}
         </DropdownList>

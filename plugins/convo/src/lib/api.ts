@@ -52,16 +52,16 @@ export const getAssistants = (
     headers: { 'Content-Type': 'application/json' },
   };
 
-  fetch(`${backendUrl}/api/proxy/tangerine/api/assistants`, requestOptions)
+  fetchFunc(`${backendUrl}/api/proxy/tangerine/api/assistants`, requestOptions)
     .then(response => response.json())
     .then(response => {
       setAssistants(
-        response.data.sort((a, b) => a.assistant_name.localeCompare(b.assistant_name)),
+        response.data.sort((a, b) => a.name.localeCompare(b.name)),
       );
       // HACK: Look for an assistant named "'inscope-all-docs-assistant'" and select it by default
       // if it isn't there just use the first assistant
       const allDocsAssistant = response.data.find(
-        assistant => assistant.assistant_name === 'inscope-all-docs-assistant',
+        assistant => assistant.name === 'inscope-all-docs-assistant',
       );
       if (allDocsAssistant) {
         setSelectedAssistant(allDocsAssistant);

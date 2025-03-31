@@ -254,7 +254,7 @@ export const Convo = () => {
     if (loading) {
       return (
         <Message
-          name={humanizeAssistantName(selectedAssistant.assistant_name)}
+          name={humanizeAssistantName(selectedAssistant.name)}
           role="bot"
           avatar={ConvoAvatar}
           timestamp=" "

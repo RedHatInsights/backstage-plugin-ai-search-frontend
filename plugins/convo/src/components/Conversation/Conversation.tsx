@@ -42,7 +42,7 @@ export const Conversation: React.FC<{ conversation: any; assistant: any }> = ({
         <React.Fragment key={id}>
           <Message
             key={id}
-            name={`${humanizeAssistantName(assistant.assistant_name)} Assistant`}
+            name={`${humanizeAssistantName(assistant.name)} Assistant`}
             role="bot"
             content={conversationEntry.text}
             avatar={ConvoAvatar}

@@ -18,7 +18,7 @@ const AssistantIntroductionMessage: React.FC<{
   return (
     <Message
       key={text}
-      name={`${humanizeAssistantName(assistant.assistant_name)} Assistant`}
+      name={`${humanizeAssistantName(assistant.name)} Assistant`}
       role="bot"
       content={text}
       avatar={ConvoAvatar}
