@@ -2,7 +2,7 @@ import React from 'react';
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
 import ConvoAvatar from '../../../static/robot.svg';
 import UserAvatar from '../../../static/user.svg';
-import { humanizeAgentName } from '../../lib/helpers';
+import { humanizeAssistantName } from '../../lib/helpers';
 import { CitationsCard } from '../Citations/CitationsCard';
 import { customStyles } from '../../lib/styles';
 import { makeStyles } from '@material-ui/core/styles';
@@ -12,9 +12,9 @@ const USER = 'human';
 
 const useStyles = makeStyles(theme => customStyles(theme));
 
-export const Conversation: React.FC<{ conversation: any; agent: any }> = ({
+export const Conversation: React.FC<{ conversation: any; assistant: any }> = ({
   conversation,
-  agent,
+  assistant,
 }) => {
   const classes = useStyles();
 
@@ -42,7 +42,7 @@ export const Conversation: React.FC<{ conversation: any; agent: any }> = ({
         <React.Fragment key={id}>
           <Message
             key={id}
-            name={`${humanizeAgentName(agent.agent_name)} Assistant`}
+            name={`${humanizeAssistantName(assistant.name)} Assistant`}
             role="bot"
             content={conversationEntry.text}
             avatar={ConvoAvatar}

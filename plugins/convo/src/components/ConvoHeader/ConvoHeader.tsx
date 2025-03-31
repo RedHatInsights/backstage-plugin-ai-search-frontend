@@ -10,18 +10,18 @@ import {
 
 import { Title, Button } from '@patternfly/react-core';
 
-import { AgentSelect } from './AgentSelect';
+import { AssistantSelect } from './AssistantSelect';
 
 import { customStyles } from '../../lib/styles';
 import { useTheme } from '@material-ui/core/styles';
 
 export const ConvoHeader: React.FC<{
-  onAgentSelect: (agent: any) => void;
+  onAssistantSelect: (assistant: any) => void;
   onNewChatClick: ([]: any) => void;
-  agents: any[];
-  selectedAgent: any;
+  assistants: any[];
+  selectedAssistant: any;
   loading: boolean;
-}> = ({ onAgentSelect, onNewChatClick, agents, selectedAgent, loading }) => {
+}> = ({ onAssistantSelect, onNewChatClick, assistants, selectedAssistant, loading }) => {
   // CSS Overrides to make PF components look normal in Backstage
   const theme = useTheme();
   const useStyles = makeStyles(_theme => customStyles(theme));
@@ -46,11 +46,11 @@ export const ConvoHeader: React.FC<{
         >
           New Chat
         </Button>
-        <AgentSelect
-          agents={agents}
-          onAgentSelect={onAgentSelect}
-          selectedAgent={selectedAgent}
-          className={classes.agentMenu}
+        <AssistantSelect
+          assistants={assistants}
+          onAssistantSelect={onAssistantSelect}
+          selectedAssistant={selectedAssistant}
+          className={classes.assistantMenu}
         />
       </ChatbotHeaderActions>
     </ChatbotHeader>
