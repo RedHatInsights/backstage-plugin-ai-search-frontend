@@ -4,6 +4,7 @@ const CLIENT = 'convo';
 
 export const sendFeedback = (
   backendUrl: string,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
   feedbackOpts: {
     interactionId: string;
     feedback: string;
@@ -17,7 +18,7 @@ export const sendFeedback = (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(feedbackOpts),
   };
-  fetch(`${backendUrl}/api/proxy/tangerine/api/feedback`, requestOptions)
+  fetchFunc(`${backendUrl}/api/proxy/tangerine/api/feedback`, requestOptions)
     .then(response => {
       if (!response.ok) {
         throw new Error(
@@ -40,6 +41,7 @@ export const sendFeedback = (
 
 export const getAssistants = (
   backendUrl: string,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
   setAssistants: (data: any) => void,
   setSelectedAssistant: (id: string) => void,
   setError: (error: boolean) => void,
@@ -77,6 +79,7 @@ export const getAssistants = (
 
 export const sendUserQuery = async (
   backendUrl: string,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
   assistantId: number,
   userQuery: any,
   previousMessages: any,
@@ -97,6 +100,7 @@ export const sendUserQuery = async (
 
     const response = await sendQueryToServer(
       assistantId,
+      fetchFunc,
       userQuery,
       backendUrl,
       previousMessages,
@@ -120,6 +124,7 @@ export const sendUserQuery = async (
 // Private functions
 const sendQueryToServer = async (
   assistantId: any,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
   userQuery: any,
   backendUrl: string,
   previousMessages: string,
@@ -127,7 +132,7 @@ const sendQueryToServer = async (
   abortSignal: AbortSignal,
 ) => {
   try {
-    const response = await fetch(
+    const response = await fetchFunc(
       `${backendUrl}/api/proxy/tangerine/api/assistants/${assistantId}/chat`,
       {
         method: 'POST',

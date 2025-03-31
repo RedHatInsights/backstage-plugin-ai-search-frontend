@@ -5,8 +5,6 @@ app:
 organization:
   name: My Company
 
-dangerouslyAllowUnverifiedAuth: true
-
 backend:
   # Used for enabling authentication, secret is shared by all backend plugins
   # See https://backstage.io/docs/auth/service-to-service-auth for
@@ -52,7 +50,6 @@ proxy:
       headers:
         Authorization: Bearer ${TANGERINE_TOKEN}
       allowedMethods: ['POST', 'GET']
-      credentials: dangerously-allow-unauthenticated
 
 
   ### Example for how to add a proxy endpoint for the frontend.
