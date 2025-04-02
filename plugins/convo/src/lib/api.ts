@@ -58,10 +58,10 @@ export const getAssistants = (
       setAssistants(
         response.data.sort((a, b) => a.name.localeCompare(b.name)),
       );
-      // HACK: Look for an assistant named "'inscope-all-docs-assistant'" and select it by default
+      // HACK: Look for an assistant named "'inscope-all-docs'" and select it by default
       // if it isn't there just use the first assistant
       const allDocsAssistant = response.data.find(
-        assistant => assistant.name === 'inscope-all-docs-assistant',
+        assistant => assistant.name.includes('inscope-all-docs'), 
       );
       if (allDocsAssistant) {
         setSelectedAssistant(allDocsAssistant);
