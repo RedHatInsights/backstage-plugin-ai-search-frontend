@@ -1,7 +1,7 @@
 import React from 'react';
 import { sendFeedback } from '../../lib/api';
 import { Button, Spinner, Content } from '@patternfly/react-core';
-import { configApiRef, useApi } from '@backstage/core-plugin-api';
+import { configApiRef, useApi, fetchApiRef } from '@backstage/core-plugin-api';
 
 type FeedbackOpts = {
   interactionId: string;
@@ -14,6 +14,7 @@ export const Feedback: React.FC<{
   interactionId: string;
 }> = ({ interactionId }) => {
   const config = useApi(configApiRef);
+  const fetchApi = useApi(fetchApiRef);
   const backendUrl = config.getString('backend.baseUrl');
   const [sending, setSending] = React.useState(false);
   const [feedbackSent, setFeedbackSent] = React.useState(false);
@@ -31,7 +32,7 @@ export const Feedback: React.FC<{
 
   const clickHandler = (feedbackOpts: FeedbackOpts) => {
     setSending(true);
-    sendFeedback(backendUrl, feedbackOpts, onResponse);
+    sendFeedback(backendUrl, fetchApi.fetch, feedbackOpts, onResponse);
   };
 
   const FeedbackUI = () => {
