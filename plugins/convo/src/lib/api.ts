@@ -176,18 +176,20 @@ const processChunk = (
   value: string,
   updateConversation: (text_content: string, search_metadata: any) => void,
 ) => {
-  try {
-    const matches = [...value.matchAll(/data: (\{.*\})\r\n/g)];
+  const matches = [...value.matchAll(/data: (\{.*\})\r\n/g)];
 
-    for (const match of matches) {
-      const jsonString = match[1];
-      const { text_content, search_metadata } = JSON.parse(jsonString);
+  for (const match of matches) {
+    const jsonString = match[1];
+    try {
+      const parsed = JSON.parse(jsonString);
+      const { text_content, search_metadata } = parsed;
       if (text_content || search_metadata) {
         updateConversation(text_content, search_metadata);
       }
+    } catch (error: any) {
+      console.warn(`Skipping invalid JSON: ${jsonString}`);
+      console.error(`Error: ${error.message}`);
     }
-  } catch (error: any) {
-    console.log(`Failed to process chunk: ${error.message}`);
   }
 };
 
@@ -198,7 +200,6 @@ const processStream = async (
   updateConversation: (
     text_content: string,
     search_metadata: any,
-    sessionId: string,
   ) => void,
   abortSignal: AbortSignal,
 ) => {
