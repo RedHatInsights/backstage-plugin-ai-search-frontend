@@ -179,7 +179,7 @@ export const Convo = () => {
 
       // If we have search metadata we need to update the last message
       // and set the done flag to true
-      if (search_metadata) {
+      if (search_metadata && search_metadata.length > 0) {
         updatedMessages[updatedMessages.length - 1].search_metadata =
           search_metadata;
         updatedMessages[updatedMessages.length - 1].done = true;
