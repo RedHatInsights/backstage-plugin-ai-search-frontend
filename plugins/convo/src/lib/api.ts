@@ -55,13 +55,11 @@ export const getAssistants = (
   fetchFunc(`${backendUrl}/api/proxy/tangerine/api/assistants`, requestOptions)
     .then(response => response.json())
     .then(response => {
-      setAssistants(
-        response.data.sort((a, b) => a.name.localeCompare(b.name)),
-      );
+      setAssistants(response.data.sort((a, b) => a.name.localeCompare(b.name)));
       // HACK: Look for an assistant named "'inscope-all-docs'" and select it by default
       // if it isn't there just use the first assistant
-      const allDocsAssistant = response.data.find(
-        assistant => assistant.name.includes('inscope-all-docs'), 
+      const allDocsAssistant = response.data.find(assistant =>
+        assistant.name.includes('inscope-all-docs'),
       );
       if (allDocsAssistant) {
         setSelectedAssistant(allDocsAssistant);
@@ -197,10 +195,7 @@ const processStream = async (
   reader: ReadableStreamDefaultReader,
   setLoading: (loading: boolean) => void,
   setResponseIsStreaming: (streaming: boolean) => void,
-  updateConversation: (
-    text_content: string,
-    search_metadata: any,
-  ) => void,
+  updateConversation: (text_content: string, search_metadata: any) => void,
   abortSignal: AbortSignal,
 ) => {
   setLoading(false);
@@ -224,6 +219,8 @@ const processStream = async (
       }
     }
   } catch (error: any) {
+    setLoading(false);
+    setResponseIsStreaming(false);
     console.log(`Error processing stream: ${error.message}`);
   }
 };
