@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useApi, fetchApiRef, configApiRef } from '@backstage/core-plugin-api';
+import {
+  useApi,
+  fetchApiRef,
+  configApiRef,
+  identityApiRef,
+} from '@backstage/core-plugin-api';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import { Content, Page } from '@backstage/core-components';
 import Chatbot, {
@@ -22,6 +28,9 @@ import { getAssistants, sendUserQuery } from '../../lib/api';
 // Style imports needed for the virtual assistant component
 import '@patternfly/react-core/dist/styles/base.css';
 import '@patternfly/chatbot/dist/css/main.css';
+
+import { useAsync } from 'react-use';
+import { UserEntity } from '@backstage/catalog-model';
 
 // CSS Overrides to make PF components look normal in Backstage
 const useStyles = makeStyles(theme => customStyles(theme));
@@ -51,9 +60,13 @@ export const Convo = () => {
   const [showAssistantIntroduction, setShowAssistantIntroduction] =
     useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>(crypto.randomUUID());
+  const [user, setUser] = useState<UserEntity>({} as UserEntity);
+  const [firstName, setFirstName] = useState<string>('');
   const abortControllerRef = useRef(new AbortController());
 
   const fetchApi = useApi(fetchApiRef);
+  const identityApi = useApi(identityApiRef);
+  const catalogApi = useApi(catalogApiRef);
 
   useEffect(() => {
     const handleLinkClick = event => {
@@ -69,6 +82,25 @@ export const Convo = () => {
       document.removeEventListener('click', handleLinkClick);
     };
   }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { userEntityRef } = await identityApi.getBackstageIdentity();
+      const userEntity = (await catalogApi.getEntityByRef(
+        userEntityRef,
+      )) as UserEntity;
+      setUser(userEntity);
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (user?.spec?.profile?.displayName) {
+      setFirstName(user.spec.profile.displayName.split(' ')[0]);
+    } else {
+      setFirstName('');
+    }
+  }, [user]);
 
   useEffect(() => {
     const currentTheme = theme.palette.type;
@@ -147,7 +179,6 @@ export const Convo = () => {
   }, [conversation.length]);
 
   const updateConversation = (text_content: string, search_metadata: any) => {
-
     setConversation(prevMessages => {
       const lastMessage = prevMessages[prevMessages.length - 1];
       if (!lastMessage) {
@@ -185,7 +216,6 @@ export const Convo = () => {
         updatedMessages[updatedMessages.length - 1].done = true;
         updatedMessages[updatedMessages.length - 1].interactionId =
           search_metadata[0].interactionId;
-
       }
 
       return updatedMessages;
@@ -284,6 +314,7 @@ export const Convo = () => {
             <WelcomeMessages
               show={!assistantHasBeenSelected}
               sendMessageHandler={sendMessageHandler}
+              firstName={firstName}
             />
             <AssistantIntroduction
               assistant={selectedAssistant}
@@ -293,7 +324,10 @@ export const Convo = () => {
               sessionId={sessionId}
               abortControllerRef={abortControllerRef}
             />
-            <Conversation conversation={conversation} assistant={selectedAssistant} />
+            <Conversation
+              conversation={conversation}
+              assistant={selectedAssistant}
+            />
             <ShowLoadingMessage />
             <ShowErrorMessage />
           </MessageBox>
