@@ -6,6 +6,7 @@ import {
   ChatbotHeaderMain,
   ChatbotHeaderActions,
   ChatbotHeaderTitle,
+  ChatbotHeaderMenu,
 } from '@patternfly/chatbot/dist/dynamic/ChatbotHeader';
 
 import { Title, Button } from '@patternfly/react-core';
@@ -21,7 +22,17 @@ export const ConvoHeader: React.FC<{
   assistants: any[];
   selectedAssistant: any;
   loading: boolean;
-}> = ({ onAssistantSelect, onNewChatClick, assistants, selectedAssistant, loading }) => {
+  setSidebarOpen: (open: boolean) => void;
+  sidebarOpen: boolean;
+}> = ({
+  onAssistantSelect,
+  onNewChatClick,
+  assistants,
+  selectedAssistant,
+  loading,
+  setSidebarOpen,
+  sidebarOpen,
+}) => {
   // CSS Overrides to make PF components look normal in Backstage
   const theme = useTheme();
   const useStyles = makeStyles(_theme => customStyles(theme));
@@ -30,7 +41,12 @@ export const ConvoHeader: React.FC<{
   return (
     <ChatbotHeader className={classes.header}>
       <ChatbotHeaderMain>
-        <ChatbotHeaderTitle className={classes.headerTitle} >
+        <ChatbotHeaderMenu
+          aria-expanded={sidebarOpen}
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+
+        <ChatbotHeaderTitle className={classes.headerTitle}>
           <Title headingLevel="h1" size="3xl">
             Convo
           </Title>
@@ -38,7 +54,9 @@ export const ConvoHeader: React.FC<{
       </ChatbotHeaderMain>
       <ChatbotHeaderActions>
         <Button
-          className={loading ?  classes.redHatGrayBGColor : classes.redHatRedBGColor}
+          className={
+            loading ? classes.redHatGrayBGColor : classes.redHatRedBGColor
+          }
           isDisabled={loading}
           onClick={() => {
             onNewChatClick([]);

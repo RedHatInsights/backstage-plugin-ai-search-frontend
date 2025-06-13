@@ -18,12 +18,13 @@ import ConvoAvatar from '../../../static/robot.svg';
 import { ConvoFooter } from '../ConvoFooter/ConvoFooter';
 import { ConvoHeader } from '../ConvoHeader/ConvoHeader';
 import { Conversation } from '../Conversation/Conversation';
+import { ChatbotConversationHistoryNav } from '@patternfly/chatbot/dist/dynamic/ChatbotConversationHistoryNav';
 import { WelcomeMessages } from '../WelcomeMessages/WelcomeMessages';
 import { AssistantIntroduction } from '../AssistantIntroduction/AssistantIntroduction';
 import { humanizeAssistantName } from '../../lib/helpers';
 
 import { customStyles } from '../../lib/styles';
-import { getAssistants, sendUserQuery } from '../../lib/api';
+import { getAssistants, sendUserQuery, getConversations } from '../../lib/api';
 
 // Style imports needed for the virtual assistant component
 import '@patternfly/react-core/dist/styles/base.css';
@@ -61,7 +62,10 @@ export const Convo = () => {
     useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>(crypto.randomUUID());
   const [user, setUser] = useState<UserEntity>({} as UserEntity);
+  const [userId, setUserId] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [conversations, setConversations] = useState<any[]>([]);
   const abortControllerRef = useRef(new AbortController());
 
   const fetchApi = useApi(fetchApiRef);
@@ -100,6 +104,11 @@ export const Convo = () => {
     } else {
       setFirstName('');
     }
+    if (user?.metadata?.uid) {
+      setUserId(user?.spec?.profile?.email || 'unknown_user');
+    } else {
+      setUserId('');
+    }
   }, [user]);
 
   useEffect(() => {
@@ -132,6 +141,32 @@ export const Convo = () => {
     );
   }, [assistants]);
 
+  // Fetch conversations from the backend
+  useEffect(() => {
+    if ( conversation.length > 1 ) {
+      return; // Skip fetching conversations if the conversation already has messages
+    }
+    const fetchConversations = async () => {
+      try {
+        getConversations(
+          backendUrl,
+          fetchApi.fetch,
+          setConversations,
+          setError,
+          setLoading,
+          userId,
+        );
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+        setError(true);
+        setLoading(false);
+      }
+    };
+    if (userId) {
+      fetchConversations();
+    }
+  }, [userId, backendUrl, fetchApi.fetch, conversation]);
+
   // Whenever the conversation changes,
   // If the last message in the conversation is from the user and the bot is not typing, send the user query
   useEffect(() => {
@@ -156,11 +191,13 @@ export const Convo = () => {
           updateConversation,
           sessionId,
           abortControllerRef.current.signal,
+          userId,
         );
       } catch (error) {
         console.log('Error sending user query:', error);
       }
     }
+    console.log('Conversation updated:', conversation);
   }, [conversation]);
 
   // If we are loading, clear the user input message
@@ -299,41 +336,54 @@ export const Convo = () => {
     <Page themeId="tool">
       <Content className={classes.container}>
         <Chatbot displayMode={ChatbotDisplayMode.embedded}>
-          <ConvoHeader
-            onAssistantSelect={assistantSelectionHandler}
-            onNewChatClick={handleNewChatClick}
-            assistants={assistants}
-            selectedAssistant={selectedAssistant}
-            loading={loading}
-          />
-          <MessageBox
-            className={`${classes.messagebox} ${classes.userMessageText} `}
-            style={{ justifyContent: 'flex-end' }}
-            announcement="Type your message and hit enter to send"
-          >
-            <WelcomeMessages
-              show={!assistantHasBeenSelected}
-              sendMessageHandler={sendMessageHandler}
-              firstName={firstName}
-            />
-            <AssistantIntroduction
-              assistant={selectedAssistant}
-              backendUrl={backendUrl}
-              assistantHasBeenSelected={assistantHasBeenSelected}
-              show={showAssistantIntroduction}
-              sessionId={sessionId}
-              abortControllerRef={abortControllerRef}
-            />
-            <Conversation
-              conversation={conversation}
-              assistant={selectedAssistant}
-            />
-            <ShowLoadingMessage />
-            <ShowErrorMessage />
-          </MessageBox>
-          <ConvoFooter
-            sendMessageHandler={sendMessageHandler}
-            responseIsStreaming={responseIsStreaming}
+          <ChatbotConversationHistoryNav
+            isDrawerOpen={sidebarOpen}
+            conversations={conversations}
+            onDrawerToggle={() => {setSidebarOpen(!sidebarOpen)}}
+            setIsDrawerOpen={() => {setSidebarOpen(!sidebarOpen)}}
+            displayMode={ChatbotDisplayMode.default}
+            drawerContent={
+              <>
+                <ConvoHeader
+                  onAssistantSelect={assistantSelectionHandler}
+                  onNewChatClick={handleNewChatClick}
+                  assistants={assistants}
+                  selectedAssistant={selectedAssistant}
+                  loading={loading}
+                  setSidebarOpen={setSidebarOpen}
+                  sidebarOpen={sidebarOpen}
+                />
+                <MessageBox
+                  className={`${classes.messagebox} ${classes.userMessageText} `}
+                  style={{ justifyContent: 'flex-end' }}
+                  announcement="Type your message and hit enter to send"
+                >
+                  <WelcomeMessages
+                    show={!assistantHasBeenSelected}
+                    sendMessageHandler={sendMessageHandler}
+                    firstName={firstName}
+                  />
+                  <AssistantIntroduction
+                    assistant={selectedAssistant}
+                    backendUrl={backendUrl}
+                    assistantHasBeenSelected={assistantHasBeenSelected}
+                    show={showAssistantIntroduction}
+                    sessionId={sessionId}
+                    abortControllerRef={abortControllerRef}
+                  />
+                  <Conversation
+                    conversation={conversation}
+                    assistant={selectedAssistant}
+                  />
+                  <ShowLoadingMessage />
+                  <ShowErrorMessage />
+                </MessageBox>
+                <ConvoFooter
+                  sendMessageHandler={sendMessageHandler}
+                  responseIsStreaming={responseIsStreaming}
+                />
+              </>
+            }
           />
         </Chatbot>
       </Content>

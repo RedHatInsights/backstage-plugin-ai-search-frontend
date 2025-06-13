@@ -2,6 +2,60 @@ const CLIENT = 'convo';
 
 // Public functions
 
+export const getConversations = (
+  backendUrl: string,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
+  setConversations: (data: any) => void,
+  setError: (error: boolean) => void,
+  setLoading: (loading: boolean) => void,
+  userId: string,
+) => {
+  const requestOptions = {
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    body: JSON.stringify({
+      user_id: userId || 'anonymous',
+    }),
+  };
+  fetchFunc(
+    `${backendUrl}/api/proxy/tangerine/api/conversations/list`,
+    requestOptions,
+  )
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(
+          `Server responded with ${response.status}: ${response.statusText}`,
+        );
+      }
+      return response.json();
+    })
+    .then(response => {
+      if (response.error) {
+        throw new Error(`Error: ${response.error}`);
+      }
+      console.log(response)
+      setConversations({
+        Conversations: response
+          .sort((a: any, b: any) => {
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          })
+          .map((conversation: any, idx: number) => {
+            return { text: conversation.title, id: idx };
+          }),
+      });
+    })
+    .catch(error => {
+      setError(true);
+      setLoading(false);
+      console.error(
+        `Error fetching conversations from backend: ${error.message}`,
+      );
+    });
+};
+
 export const sendFeedback = (
   backendUrl: string,
   fetchFunc: (url: string, opts: any) => Promise<Response>,
@@ -88,6 +142,7 @@ export const sendUserQuery = async (
   updateConversation: (text_content: string, search_metadata: any) => void,
   sessionId: string,
   abortSignal: AbortSignal,
+  userId: string,
 ) => {
   try {
     setLoading(true);
@@ -104,6 +159,7 @@ export const sendUserQuery = async (
       previousMessages,
       sessionId,
       abortSignal,
+      userId,
     );
     const reader = createStreamReader(response);
 
@@ -128,6 +184,7 @@ const sendQueryToServer = async (
   previousMessages: string,
   sessionId: string,
   abortSignal: AbortSignal,
+  userId: string,
 ) => {
   try {
     const response = await fetchFunc(
@@ -142,6 +199,7 @@ const sendQueryToServer = async (
           client: CLIENT,
           interactionId: crypto.randomUUID(),
           sessionId: sessionId,
+          user: userId || 'anonymous',
         }),
         cache: 'no-cache',
         signal: abortSignal,
