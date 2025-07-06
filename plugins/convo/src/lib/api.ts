@@ -34,8 +34,7 @@ export const getConversations = (
         throw new Error(`Error: ${response.error}`);
       }
       console.log(response)
-      setConversations({
-        Conversations: response
+      setConversations(response
           .sort((a: any, b: any) => {
             return (
               new Date(b.created_at).getTime() -
@@ -43,9 +42,14 @@ export const getConversations = (
             );
           })
           .map((conversation: any, idx: number) => {
-            return { text: conversation.title, id: idx };
+            return { 
+              text: conversation.title, 
+              id: idx.toString(), 
+              payload: conversation.payload.prevMsgs,
+              sessionId: conversation.sessionId
+            };
           }),
-      });
+      );
     })
     .catch(error => {
       setError(true);

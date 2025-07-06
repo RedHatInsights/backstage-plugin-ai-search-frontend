@@ -30,7 +30,6 @@ import { getAssistants, sendUserQuery, getConversations } from '../../lib/api';
 import '@patternfly/react-core/dist/styles/base.css';
 import '@patternfly/chatbot/dist/css/main.css';
 
-import { useAsync } from 'react-use';
 import { UserEntity } from '@backstage/catalog-model';
 
 // CSS Overrides to make PF components look normal in Backstage
@@ -46,9 +45,25 @@ export const Convo = () => {
   const backendUrl = config.getString('backend.baseUrl');
   const theme = useTheme();
 
+  // Define types for conversation messages
+  interface ConversationMessage {
+    sender: string;
+    text: string;
+    done: boolean;
+    search_metadata?: any;
+    interactionId?: string | boolean;
+  }
+
+  interface ConversationItem {
+    id: string;
+    text: string;
+    payload: ConversationMessage[];
+    sessionId?: string;
+  }
+
   // State
   const [_userInputMessage, setUserInputMessage] = useState<string>('');
-  const [conversation, setConversation] = useState([]);
+  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [assistants, setAssistants] = useState<any>([]);
@@ -65,7 +80,7 @@ export const Convo = () => {
   const [userId, setUserId] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const abortControllerRef = useRef(new AbortController());
 
   const fetchApi = useApi(fetchApiRef);
@@ -73,8 +88,8 @@ export const Convo = () => {
   const catalogApi = useApi(catalogApiRef);
 
   useEffect(() => {
-    const handleLinkClick = event => {
-      const link = event.target.closest('a'); // Matches any <a> element
+    const handleLinkClick = (event: Event) => {
+      const link = (event.target as HTMLElement).closest('a'); // Matches any <a> element
       if (link) {
         event.preventDefault();
         window.open(link.href, '_blank', 'noopener,noreferrer');
@@ -269,7 +284,7 @@ export const Convo = () => {
 
   const sendMessageHandler = (msg: string) => {
     setUserInputMessage('');
-    const conversationEntry = {
+    const conversationEntry: ConversationMessage = {
       text: msg,
       sender: USER,
       done: false,
@@ -317,6 +332,36 @@ export const Convo = () => {
     setSessionId(crypto.randomUUID());
   };
 
+  const handleConversationSelect = (_event?: React.MouseEvent, itemId?: string | number) => {
+    console.log('handleConversationSelect called with itemId:', itemId, 'type:', typeof itemId);
+    console.log('Available conversations:', conversations);
+    
+    if (itemId !== undefined && Array.isArray(conversations)) {
+      // Find conversation by id in the conversations array
+      const selectedConversation = conversations.find((conv: ConversationItem) => {
+        const idMatch = conv.id.toString() === itemId?.toString();
+        console.log('Comparing conv.id:', conv.id, 'with itemId:', itemId, 'match:', idMatch);
+        return idMatch;
+      });
+      
+      if (selectedConversation) {
+        console.log('Found conversation:', selectedConversation);
+        recycleAbortController();
+        setConversation(selectedConversation.payload || []);
+        setError(false);
+        setLoading(false);
+        setResponseIsStreaming(false);
+        setShowAssistantIntroduction(false);
+        setSessionId(selectedConversation.sessionId || crypto.randomUUID());
+        setSidebarOpen(false); // Close sidebar after selection
+      } else {
+        console.log('Conversation not found for itemId:', itemId, 'conversations:', conversations);
+      }
+    } else {
+      console.log('Invalid itemId or conversations array:', { itemId, conversations });
+    }
+  };
+
   const ShowLoadingMessage = () => {
     if (loading) {
       return (
@@ -341,6 +386,7 @@ export const Convo = () => {
             conversations={conversations}
             onDrawerToggle={() => {setSidebarOpen(!sidebarOpen)}}
             setIsDrawerOpen={() => {setSidebarOpen(!sidebarOpen)}}
+            onSelectActiveItem={handleConversationSelect}
             displayMode={ChatbotDisplayMode.default}
             drawerContent={
               <>
