@@ -243,14 +243,19 @@ export const Convo = () => {
         setLoading(false);
       }
     };
-    if (userId) {
+    
+    // Only fetch conversations when we have a userId and either:
+    // - shouldRefreshConversations is true, OR
+    // - sidebarOpen is true (drawer is opening)
+    if (userId && (shouldRefreshConversations || sidebarOpen)) {
+      console.log('Fetching conversations because:', { shouldRefreshConversations, sidebarOpen });
       fetchConversations();
       // Reset the refresh flag after fetching
       if (shouldRefreshConversations) {
         setShouldRefreshConversations(false);
       }
     }
-  }, [userId, backendUrl, fetchApi.fetch, shouldRefreshConversations]);
+  }, [userId, backendUrl, fetchApi.fetch, shouldRefreshConversations, sidebarOpen]);
 
   // Whenever the conversation changes,
   // If the last message in the conversation is from the user and the bot is not typing, send the user query
@@ -500,8 +505,7 @@ export const Convo = () => {
             handleTextInputChange={handleSearchInputChange}
             searchInputPlaceholder="Search conversations..."
             searchInputAriaLabel="Search through conversation history"
-            onNewChat={() => handleNewChatClick([])}
-            newChatButtonText="New chat"
+
             drawerContent={
               <>
                 <ConvoHeader
