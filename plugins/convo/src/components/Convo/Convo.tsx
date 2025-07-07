@@ -13,6 +13,7 @@ import Chatbot, {
 } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import Message from '@patternfly/chatbot/dist/dynamic/Message';
+import { DropdownItem } from '@patternfly/react-core';
 import ConvoAvatar from '../../../static/robot.svg';
 
 import { ConvoFooter } from '../ConvoFooter/ConvoFooter';
@@ -24,7 +25,7 @@ import { AssistantIntroduction } from '../AssistantIntroduction/AssistantIntrodu
 import { humanizeAssistantName } from '../../lib/helpers';
 
 import { customStyles } from '../../lib/styles';
-import { getAssistants, sendUserQuery, getConversations } from '../../lib/api';
+import { getAssistants, sendUserQuery, getConversations, deleteConversation } from '../../lib/api';
 
 // Style imports needed for the virtual assistant component
 import '@patternfly/react-core/dist/styles/base.css';
@@ -59,6 +60,9 @@ export const Convo = () => {
     text: string;
     payload: ConversationMessage[];
     sessionId?: string;
+    assistant_name?: string;
+    menuItems?: React.ReactNode[];
+    onSelect?: (event?: React.MouseEvent, value?: string | number) => void;
   }
 
   // State
@@ -81,6 +85,8 @@ export const Convo = () => {
   const [firstName, setFirstName] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [shouldRefreshConversations, setShouldRefreshConversations] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const abortControllerRef = useRef(new AbortController());
 
   const fetchApi = useApi(fetchApiRef);
@@ -158,15 +164,75 @@ export const Convo = () => {
 
   // Fetch conversations from the backend
   useEffect(() => {
-    if ( conversation.length > 1 ) {
-      return; // Skip fetching conversations if the conversation already has messages
-    }
     const fetchConversations = async () => {
       try {
         getConversations(
           backendUrl,
           fetchApi.fetch,
-          setConversations,
+                    (rawConversations: ConversationItem[]) => {
+            console.log('Raw conversations received:', rawConversations);
+            // Add menu items to each conversation
+            const conversationsWithMenus = rawConversations.map((conv) => {
+              console.log('Processing conversation:', conv);
+              return {
+                ...conv,
+                menuItems: [
+                  <DropdownItem 
+                    key="delete" 
+                    style={{ color: 'var(--pf-v5-global--danger-color--100)' }}
+                    onClick={(event) => {
+                      console.log('Delete clicked for conversation:', conv.id);
+                      event.preventDefault();
+                      event.stopPropagation();
+                      console.log('conv', conv);
+                      // Call delete function directly here
+                      if (!userId) {
+                        console.error('Cannot delete conversation: userId is not available');
+                        return;
+                      }
+                      
+                      if (!conv.sessionId) {
+                        console.error('Cannot delete conversation: sessionId missing');
+                        return;
+                      }
+                      
+                      console.log('Calling deleteConversation API with:', { userId, sessionId: conv.sessionId });
+                      
+                      // Call the delete API
+                      deleteConversation(
+                        backendUrl,
+                        fetchApi.fetch,
+                        userId,
+                        conv.sessionId,
+                        (response) => {
+                          console.log('Delete API response:', response);
+                          if (response.error) {
+                            console.error('Error deleting conversation:', response.error);
+                            setError(true);
+                          } else {
+                            console.log('Conversation deleted successfully');
+                            
+                            // If the deleted conversation was the active one, clear the current conversation
+                            if (conv.sessionId === sessionId) {
+                              setConversation([]);
+                              setSessionId(crypto.randomUUID());
+                              setShowAssistantIntroduction(false);
+                            }
+                            
+                            // Refresh the conversation list
+                            setShouldRefreshConversations(true);
+                          }
+                        }
+                      );
+                    }}
+                  >
+                    Delete conversation
+                  </DropdownItem>
+                ]
+              };
+            });
+            setConversations(conversationsWithMenus);
+          },
           setError,
           setLoading,
           userId,
@@ -179,8 +245,12 @@ export const Convo = () => {
     };
     if (userId) {
       fetchConversations();
+      // Reset the refresh flag after fetching
+      if (shouldRefreshConversations) {
+        setShouldRefreshConversations(false);
+      }
     }
-  }, [userId, backendUrl, fetchApi.fetch, conversation]);
+  }, [userId, backendUrl, fetchApi.fetch, shouldRefreshConversations]);
 
   // Whenever the conversation changes,
   // If the last message in the conversation is from the user and the bot is not typing, send the user query
@@ -230,6 +300,8 @@ export const Convo = () => {
     }
   }, [conversation.length]);
 
+
+
   const updateConversation = (text_content: string, search_metadata: any) => {
     setConversation(prevMessages => {
       const lastMessage = prevMessages[prevMessages.length - 1];
@@ -268,6 +340,9 @@ export const Convo = () => {
         updatedMessages[updatedMessages.length - 1].done = true;
         updatedMessages[updatedMessages.length - 1].interactionId =
           search_metadata[0].interactionId;
+        
+        // Trigger conversation list refresh when streaming is complete
+        setShouldRefreshConversations(true);
       }
 
       return updatedMessages;
@@ -354,6 +429,24 @@ export const Convo = () => {
         setShowAssistantIntroduction(false);
         setSessionId(selectedConversation.sessionId || crypto.randomUUID());
         setSidebarOpen(false); // Close sidebar after selection
+
+        // Set the correct assistant if available in the conversation data
+        // Look for assistant_name in the conversation data (from the API response)
+        console.log('Selected conversation has assistant_name:', selectedConversation.assistant_name);
+        if (selectedConversation.assistant_name && assistants.length > 0) {
+          const matchingAssistant = assistants.find((assistant: any) => 
+            assistant.name === selectedConversation.assistant_name
+          );
+          
+          if (matchingAssistant) {
+            console.log('Setting assistant to:', matchingAssistant);
+            setSelectedAssistant(matchingAssistant);
+            setAssistantHasBeenSelected(true);
+          } else {
+            console.log('Assistant not found by name:', selectedConversation.assistant_name, 'using current assistant');
+            // Keep the currently selected assistant if the specific one isn't found
+          }
+        }
       } else {
         console.log('Conversation not found for itemId:', itemId, 'conversations:', conversations);
       }
@@ -361,6 +454,22 @@ export const Convo = () => {
       console.log('Invalid itemId or conversations array:', { itemId, conversations });
     }
   };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchTerm(value);
+  };
+
+  // Filter conversations based on search term
+  const filteredConversations = conversations.filter((conv: ConversationItem) => {
+    if (!searchTerm.trim()) {
+      return true; // Show all conversations if no search term
+    }
+    return conv.text.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+
+
+
 
   const ShowLoadingMessage = () => {
     if (loading) {
@@ -383,11 +492,16 @@ export const Convo = () => {
         <Chatbot displayMode={ChatbotDisplayMode.embedded}>
           <ChatbotConversationHistoryNav
             isDrawerOpen={sidebarOpen}
-            conversations={conversations}
+            conversations={filteredConversations}
             onDrawerToggle={() => {setSidebarOpen(!sidebarOpen)}}
             setIsDrawerOpen={() => {setSidebarOpen(!sidebarOpen)}}
             onSelectActiveItem={handleConversationSelect}
             displayMode={ChatbotDisplayMode.default}
+            handleTextInputChange={handleSearchInputChange}
+            searchInputPlaceholder="Search conversations..."
+            searchInputAriaLabel="Search through conversation history"
+            onNewChat={() => handleNewChatClick([])}
+            newChatButtonText="New chat"
             drawerContent={
               <>
                 <ConvoHeader

@@ -33,7 +33,7 @@ export const getConversations = (
       if (response.error) {
         throw new Error(`Error: ${response.error}`);
       }
-      console.log(response)
+      console.log('API Response:', response);
       setConversations(response
           .sort((a: any, b: any) => {
             return (
@@ -42,11 +42,14 @@ export const getConversations = (
             );
           })
           .map((conversation: any, idx: number) => {
+            console.log('Individual conversation from API:', conversation);
+            console.log('Available keys:', Object.keys(conversation));
             return { 
               text: conversation.title, 
               id: idx.toString(), 
               payload: conversation.payload.prevMsgs,
-              sessionId: conversation.sessionId
+              sessionId: conversation.session_id,
+              assistant_name: conversation.assistant_name
             };
           }),
       );
@@ -57,6 +60,42 @@ export const getConversations = (
       console.error(
         `Error fetching conversations from backend: ${error.message}`,
       );
+    });
+};
+
+export const deleteConversation = (
+  backendUrl: string,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
+  userId: string,
+  sessionId: string,
+  callback: (response: any) => void,
+) => {
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userId,
+      sessionId: sessionId,
+    }),
+  };
+  fetchFunc(`${backendUrl}/api/proxy/tangerine/api/conversations/delete`, requestOptions)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(
+          `Server responded with ${response.status}: ${response.statusText}`,
+        );
+      }
+      return response.json();
+    })
+    .then(response => {
+      if (response.error) {
+        throw new Error(`Error: ${response.error}`);
+      }
+      callback(response);
+    })
+    .catch(error => {
+      console.error(`Error deleting conversation: ${error.message}`);
+      callback({ error: true });
     });
 };
 
