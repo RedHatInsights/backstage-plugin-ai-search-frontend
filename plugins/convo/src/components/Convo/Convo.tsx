@@ -93,6 +93,50 @@ export const Convo = () => {
   const identityApi = useApi(identityApiRef);
   const catalogApi = useApi(catalogApiRef);
 
+  // Create a stable delete handler to avoid recreating functions
+  const handleDeleteConversation = React.useCallback((conversationId: string, conversationSessionId: string) => {
+    console.log('Delete clicked for conversation:', conversationId);
+    
+    if (!userId) {
+      console.error('Cannot delete conversation: userId is not available');
+      return;
+    }
+    
+    if (!conversationSessionId) {
+      console.error('Cannot delete conversation: sessionId missing');
+      return;
+    }
+    
+    console.log('Calling deleteConversation API with:', { userId, sessionId: conversationSessionId });
+    
+    // Call the delete API
+    deleteConversation(
+      backendUrl,
+      fetchApi.fetch,
+      userId,
+      conversationSessionId,
+      (response) => {
+        console.log('Delete API response:', response);
+        if (response.error) {
+          console.error('Error deleting conversation:', response.error);
+          setError(true);
+        } else {
+          console.log('Conversation deleted successfully');
+          
+          // If the deleted conversation was the active one, clear the current conversation
+          if (conversationSessionId === sessionId) {
+            setConversation([]);
+            setSessionId(crypto.randomUUID());
+            setShowAssistantIntroduction(false);
+          }
+          
+          // Refresh the conversation list
+          setShouldRefreshConversations(true);
+        }
+      }
+    );
+  }, [backendUrl, fetchApi.fetch, userId, sessionId]);
+
   useEffect(() => {
     const handleLinkClick = (event: Event) => {
       const link = (event.target as HTMLElement).closest('a'); // Matches any <a> element
@@ -162,14 +206,14 @@ export const Convo = () => {
     );
   }, [assistants]);
 
-  // Fetch conversations from the backend
+    // Fetch conversations from the backend
   useEffect(() => {
     const fetchConversations = async () => {
       try {
         getConversations(
           backendUrl,
           fetchApi.fetch,
-                    (rawConversations: ConversationItem[]) => {
+          (rawConversations: ConversationItem[]) => {
             console.log('Raw conversations received:', rawConversations);
             // Add menu items to each conversation
             const conversationsWithMenus = rawConversations.map((conv) => {
@@ -181,49 +225,13 @@ export const Convo = () => {
                     key="delete" 
                     style={{ color: 'var(--pf-v5-global--danger-color--100)' }}
                     onClick={(event) => {
-                      console.log('Delete clicked for conversation:', conv.id);
                       event.preventDefault();
                       event.stopPropagation();
-                      console.log('conv', conv);
-                      // Call delete function directly here
-                      if (!userId) {
-                        console.error('Cannot delete conversation: userId is not available');
-                        return;
+                      if (conv.sessionId) {
+                        handleDeleteConversation(conv.id, conv.sessionId);
+                      } else {
+                        console.error('Cannot delete conversation: sessionId is missing');
                       }
-                      
-                      if (!conv.sessionId) {
-                        console.error('Cannot delete conversation: sessionId missing');
-                        return;
-                      }
-                      
-                      console.log('Calling deleteConversation API with:', { userId, sessionId: conv.sessionId });
-                      
-                      // Call the delete API
-                      deleteConversation(
-                        backendUrl,
-                        fetchApi.fetch,
-                        userId,
-                        conv.sessionId,
-                        (response) => {
-                          console.log('Delete API response:', response);
-                          if (response.error) {
-                            console.error('Error deleting conversation:', response.error);
-                            setError(true);
-                          } else {
-                            console.log('Conversation deleted successfully');
-                            
-                            // If the deleted conversation was the active one, clear the current conversation
-                            if (conv.sessionId === sessionId) {
-                              setConversation([]);
-                              setSessionId(crypto.randomUUID());
-                              setShowAssistantIntroduction(false);
-                            }
-                            
-                            // Refresh the conversation list
-                            setShouldRefreshConversations(true);
-                          }
-                        }
-                      );
                     }}
                   >
                     Delete conversation
@@ -255,7 +263,7 @@ export const Convo = () => {
         setShouldRefreshConversations(false);
       }
     }
-  }, [userId, backendUrl, fetchApi.fetch, shouldRefreshConversations, sidebarOpen]);
+  }, [userId, backendUrl, fetchApi.fetch, shouldRefreshConversations, sidebarOpen, handleDeleteConversation]);
 
   // Whenever the conversation changes,
   // If the last message in the conversation is from the user and the bot is not typing, send the user query
@@ -432,7 +440,13 @@ export const Convo = () => {
         setLoading(false);
         setResponseIsStreaming(false);
         setShowAssistantIntroduction(false);
-        setSessionId(selectedConversation.sessionId || crypto.randomUUID());
+        // Ensure we have a valid sessionId - if not from conversation, it's a critical error
+        if (selectedConversation.sessionId) {
+          setSessionId(selectedConversation.sessionId);
+        } else {
+          console.error('Selected conversation missing sessionId, creating new session');
+          setSessionId(crypto.randomUUID());
+        }
         setSidebarOpen(false); // Close sidebar after selection
 
         // Set the correct assistant if available in the conversation data

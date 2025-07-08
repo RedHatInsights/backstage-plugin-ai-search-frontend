@@ -46,7 +46,7 @@ export const getConversations = (
             console.log('Available keys:', Object.keys(conversation));
             return { 
               text: conversation.title, 
-              id: idx.toString(), 
+              id: conversation.id || conversation.session_id || idx.toString(), // Use actual ID, fallback to session_id, then index
               payload: conversation.payload.prevMsgs,
               sessionId: conversation.session_id,
               assistant_name: conversation.assistant_name
