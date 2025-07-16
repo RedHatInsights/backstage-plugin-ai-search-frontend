@@ -29,6 +29,15 @@ const useStyles = makeStyles(theme => customStyles(theme));
 const BOT = 'ai';
 const USER = 'human';
 
+// Define types for conversation messages
+interface ConversationMessage {
+  text: string;
+  sender: typeof USER | typeof BOT;
+  done: boolean;
+  search_metadata?: any;
+  interactionId?: string | boolean;
+}
+
 export const Convo = () => {
   // Constants
   const classes = useStyles();
@@ -38,8 +47,9 @@ export const Convo = () => {
 
   // State
   const [_userInputMessage, setUserInputMessage] = useState<string>('');
-  const [conversation, setConversation] = useState([]);
+  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [assistantsLoading, setAssistantsLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const [assistants, setAssistants] = useState<any>([]);
   const [selectedAssistant, setSelectedAssistant] = useState<any>({});
@@ -56,8 +66,8 @@ export const Convo = () => {
   const fetchApi = useApi(fetchApiRef);
 
   useEffect(() => {
-    const handleLinkClick = event => {
-      const link = event.target.closest('a'); // Matches any <a> element
+    const handleLinkClick = (event: Event) => {
+      const link = (event.target as Element).closest('a'); // Matches any <a> element
       if (link) {
         event.preventDefault();
         window.open(link.href, '_blank', 'noopener,noreferrer');
@@ -95,10 +105,10 @@ export const Convo = () => {
       setAssistants,
       setSelectedAssistant,
       setError,
-      setLoading,
+      setAssistantsLoading, // Use assistantsLoading instead of general loading
       setResponseIsStreaming,
     );
-  }, [assistants]);
+  }, [assistants, backendUrl, fetchApi.fetch]);
 
   // Whenever the conversation changes,
   // If the last message in the conversation is from the user and the bot is not typing, send the user query
@@ -129,7 +139,7 @@ export const Convo = () => {
         console.log('Error sending user query:', error);
       }
     }
-  }, [conversation]);
+  }, [conversation, loading, backendUrl, fetchApi.fetch, selectedAssistant.id, sessionId]);
 
   // If we are loading, clear the user input message
   useEffect(() => {
@@ -158,7 +168,7 @@ export const Convo = () => {
       // and we put the text content in the message.
       // In a streaming response this handles the first returned chunk
       if (lastMessage.sender !== BOT) {
-        const newMessage = {
+        const newMessage: ConversationMessage = {
           sender: BOT,
           text: text_content,
           done: false,
@@ -201,8 +211,13 @@ export const Convo = () => {
   };
 
   const sendMessageHandler = (msg: string) => {
+    // Guard against sending messages when assistants are still loading
+    if (assistantsLoading || !selectedAssistant.id) {
+      return;
+    }
+    
     setUserInputMessage('');
-    const conversationEntry = {
+    const conversationEntry: ConversationMessage = {
       text: msg,
       sender: USER,
       done: false,
@@ -216,6 +231,23 @@ export const Convo = () => {
         <Content>
           😿 Something went wrong talking Convo's brain. Try back later.
         </Content>
+      );
+    }
+    return null;
+  };
+
+  const ShowAssistantsLoadingMessage = () => {
+    if (assistantsLoading) {
+      return (
+        <Message
+          name="System"
+          role="bot"
+          avatar={ConvoAvatar}
+          timestamp=" "
+          isLoading
+        >
+          Loading available assistants...
+        </Message>
       );
     }
     return null;
@@ -240,7 +272,7 @@ export const Convo = () => {
     setSessionId(crypto.randomUUID());
   };
 
-  const handleNewChatClick = (conversation: any) => {
+  const handleNewChatClick = (conversation: ConversationMessage[]) => {
     recycleAbortController();
     setConversation(conversation);
     setError(false);
@@ -274,15 +306,16 @@ export const Convo = () => {
             onNewChatClick={handleNewChatClick}
             assistants={assistants}
             selectedAssistant={selectedAssistant}
-            loading={loading}
+            loading={loading || assistantsLoading}
           />
           <MessageBox
             className={`${classes.messagebox} ${classes.userMessageText} `}
             style={{ justifyContent: 'flex-end' }}
             announcement="Type your message and hit enter to send"
           >
+            <ShowAssistantsLoadingMessage />
             <WelcomeMessages
-              show={!assistantHasBeenSelected}
+              show={!assistantHasBeenSelected && !assistantsLoading}
               sendMessageHandler={sendMessageHandler}
             />
             <AssistantIntroduction
@@ -300,6 +333,7 @@ export const Convo = () => {
           <ConvoFooter
             sendMessageHandler={sendMessageHandler}
             responseIsStreaming={responseIsStreaming}
+            disabled={assistantsLoading || !selectedAssistant.id}
           />
         </Chatbot>
       </Content>

@@ -48,6 +48,8 @@ export const getAssistants = (
   setLoading: (loading: boolean) => void,
   setResponseIsStreaming: (streaming: boolean) => void,
 ) => {
+  setLoading(true); // Set loading to true when starting to fetch assistants
+  
   const requestOptions = {
     headers: { 'Content-Type': 'application/json' },
   };
@@ -66,6 +68,7 @@ export const getAssistants = (
       } else {
         setSelectedAssistant(response.data[0]);
       }
+      setLoading(false); // Set loading to false when successfully completed
     })
     .catch(_error => {
       setError(true);

@@ -8,7 +8,8 @@ import { customStyles } from '../../lib/styles';
 export const ConvoFooter: React.FC<{
   sendMessageHandler: (msg: string) => void;
   responseIsStreaming: boolean;
-}> = ({ sendMessageHandler, responseIsStreaming }) => {
+  disabled?: boolean;
+}> = ({ sendMessageHandler, responseIsStreaming, disabled = false }) => {
   // CSS Overrides to make PF components look normal in Backstage
   const theme = useTheme();
   const useStyles = makeStyles(_theme => customStyles(theme));
@@ -19,7 +20,7 @@ export const ConvoFooter: React.FC<{
         <MessageBar
           onSendMessage={sendMessageHandler}
           hasAttachButton={false}
-          isSendButtonDisabled={responseIsStreaming}
+          isSendButtonDisabled={responseIsStreaming || disabled}
           className={classes.userInput}
         />
       </div>
