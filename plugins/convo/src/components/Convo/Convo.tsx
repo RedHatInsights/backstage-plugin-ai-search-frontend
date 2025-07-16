@@ -236,19 +236,20 @@ export const Convo = () => {
     return null;
   };
 
-  const ShowAssistantsLoadingMessage = () => {
-    if (assistantsLoading) {
+  const ShowLoadingMessage = () => {
+    // Don't show regular loading message when assistants are loading
+    if (loading && !assistantsLoading) {
       return (
         <Message
-          name="System"
+          name={humanizeAssistantName(selectedAssistant.name)}
           role="bot"
           avatar={ConvoAvatar}
           timestamp=" "
           isLoading
-        >
-          Loading available assistants...
-        </Message>
+        />
       );
+    }
+    if (loading && assistantsLoading) {
     }
     return null;
   };
@@ -282,21 +283,6 @@ export const Convo = () => {
     setSessionId(crypto.randomUUID());
   };
 
-  const ShowLoadingMessage = () => {
-    if (loading) {
-      return (
-        <Message
-          name={humanizeAssistantName(selectedAssistant.name)}
-          role="bot"
-          avatar={ConvoAvatar}
-          timestamp=" "
-          isLoading
-        />
-      );
-    }
-    return null;
-  };
-
   return (
     <Page themeId="tool">
       <Content className={classes.container}>
@@ -313,7 +299,6 @@ export const Convo = () => {
             style={{ justifyContent: 'flex-end' }}
             announcement="Type your message and hit enter to send"
           >
-            <ShowAssistantsLoadingMessage />
             <WelcomeMessages
               show={!assistantHasBeenSelected && !assistantsLoading}
               sendMessageHandler={sendMessageHandler}
@@ -334,6 +319,7 @@ export const Convo = () => {
             sendMessageHandler={sendMessageHandler}
             responseIsStreaming={responseIsStreaming}
             disabled={assistantsLoading || !selectedAssistant.id}
+            assistantsLoading={assistantsLoading}
           />
         </Chatbot>
       </Content>
