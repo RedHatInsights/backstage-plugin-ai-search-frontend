@@ -145,6 +145,8 @@ export const getAssistants = (
   setLoading: (loading: boolean) => void,
   setResponseIsStreaming: (streaming: boolean) => void,
 ) => {
+  setLoading(true); // Set loading to true when starting to fetch assistants
+  
   const requestOptions = {
     headers: { 'Content-Type': 'application/json' },
   };
@@ -153,16 +155,21 @@ export const getAssistants = (
     .then(response => response.json())
     .then(response => {
       setAssistants(response.data.sort((a, b) => a.name.localeCompare(b.name)));
-      // HACK: Look for an assistant named "'inscope-all-docs'" and select it by default
-      // if it isn't there just use the first assistant
-      const allDocsAssistant = response.data.find(assistant =>
-        assistant.name.includes('inscope-all-docs'),
-      );
-      if (allDocsAssistant) {
-        setSelectedAssistant(allDocsAssistant);
-      } else {
-        setSelectedAssistant(response.data[0]);
+      
+      // Only try to select an assistant if we have assistants
+      if (response.data && response.data.length > 0) {
+        // HACK: Look for an assistant named "'inscope-all-docs'" and select it by default
+        // if it isn't there just use the first assistant
+        const allDocsAssistant = response.data.find(assistant =>
+          assistant.name.includes('inscope-all-docs'),
+        );
+        if (allDocsAssistant) {
+          setSelectedAssistant(allDocsAssistant);
+        } else {
+          setSelectedAssistant(response.data[0]);
+        }
       }
+      setLoading(false); // Set loading to false when successfully completed
     })
     .catch(_error => {
       setError(true);
