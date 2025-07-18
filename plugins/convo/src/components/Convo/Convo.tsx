@@ -55,15 +55,6 @@ export const Convo = () => {
   const backendUrl = config.getString('backend.baseUrl');
   const theme = useTheme();
 
-  // Define types for conversation messages
-  interface ConversationMessage {
-    sender: string;
-    text: string;
-    done: boolean;
-    search_metadata?: any;
-    interactionId?: string | boolean;
-  }
-
   interface ConversationItem {
     id: string;
     text: string;
