@@ -96,7 +96,6 @@ export const Convo = () => {
 
   // Create a stable delete handler to avoid recreating functions
   const handleDeleteConversation = React.useCallback((conversationId: string, conversationSessionId: string) => {
-    console.log('Delete clicked for conversation:', conversationId);
     
     if (!userId) {
       console.error('Cannot delete conversation: userId is not available');
@@ -108,7 +107,6 @@ export const Convo = () => {
       return;
     }
     
-    console.log('Calling deleteConversation API with:', { userId, sessionId: conversationSessionId });
     
     // Call the delete API
     deleteConversation(
@@ -117,12 +115,10 @@ export const Convo = () => {
       userId,
       conversationSessionId,
       (response) => {
-        console.log('Delete API response:', response);
         if (response.error) {
           console.error('Error deleting conversation:', response.error);
           setError(true);
         } else {
-          console.log('Conversation deleted successfully');
           
           // If the deleted conversation was the active one, clear the current conversation
           if (conversationSessionId === sessionId) {
@@ -218,7 +214,6 @@ export const Convo = () => {
             console.log('Raw conversations received:', rawConversations);
             // Add menu items to each conversation
             const conversationsWithMenus = rawConversations.map((conv) => {
-              console.log('Processing conversation:', conv);
               return {
                 ...conv,
                 menuItems: [
@@ -257,7 +252,6 @@ export const Convo = () => {
     // - shouldRefreshConversations is true, OR
     // - sidebarOpen is true (drawer is opening)
     if (userId && (shouldRefreshConversations || sidebarOpen)) {
-      console.log('Fetching conversations because:', { shouldRefreshConversations, sidebarOpen });
       fetchConversations();
       // Reset the refresh flag after fetching
       if (shouldRefreshConversations) {
@@ -272,8 +266,10 @@ export const Convo = () => {
     if (
       conversation.length > 0 &&
       conversation[conversation.length - 1].sender === USER &&
-      !loading
+      !loading &&
+      !responseIsStreaming
     ) {
+      console.log('Sending user query');
       const lastMessage = conversation[conversation.length - 1];
       const previousMessages = conversation.slice(0, conversation.length - 1);
       try {
@@ -296,7 +292,7 @@ export const Convo = () => {
         console.log('Error sending user query:', error);
       }
     }
-  }, [conversation, loading, backendUrl, fetchApi.fetch, selectedAssistant.id, sessionId]);
+  }, [conversation, loading, responseIsStreaming, backendUrl, fetchApi.fetch, selectedAssistant.id, sessionId, userId]);
 
   // If we are loading, clear the user input message
   useEffect(() => {
@@ -371,6 +367,7 @@ export const Convo = () => {
   };
 
   const sendMessageHandler = (msg: string) => {
+    console.log('sendMessageHandler called with msg:', msg);
     // Guard against sending messages when assistants are still loading
     if (assistantsLoading || !selectedAssistant.id) {
       return;
@@ -445,19 +442,15 @@ export const Convo = () => {
   };
 
   const handleConversationSelect = (_event?: React.MouseEvent, itemId?: string | number) => {
-    console.log('handleConversationSelect called with itemId:', itemId, 'type:', typeof itemId);
-    console.log('Available conversations:', conversations);
     
     if (itemId !== undefined && Array.isArray(conversations)) {
       // Find conversation by id in the conversations array
       const selectedConversation = conversations.find((conv: ConversationItem) => {
         const idMatch = conv.id.toString() === itemId?.toString();
-        console.log('Comparing conv.id:', conv.id, 'with itemId:', itemId, 'match:', idMatch);
         return idMatch;
       });
       
       if (selectedConversation) {
-        console.log('Found conversation:', selectedConversation);
         recycleAbortController();
         setConversation(selectedConversation.payload || []);
         setError(false);
@@ -475,14 +468,12 @@ export const Convo = () => {
 
         // Set the correct assistant if available in the conversation data
         // Look for assistant_name in the conversation data (from the API response)
-        console.log('Selected conversation has assistant_name:', selectedConversation.assistant_name);
         if (selectedConversation.assistant_name && assistants.length > 0) {
           const matchingAssistant = assistants.find((assistant: any) => 
             assistant.name === selectedConversation.assistant_name
           );
           
           if (matchingAssistant) {
-            console.log('Setting assistant to:', matchingAssistant);
             setSelectedAssistant(matchingAssistant);
             setAssistantHasBeenSelected(true);
           } else {

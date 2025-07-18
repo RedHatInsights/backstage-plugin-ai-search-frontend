@@ -33,7 +33,6 @@ export const getConversations = (
       if (response.error) {
         throw new Error(`Error: ${response.error}`);
       }
-      console.log('API Response:', response);
       setConversations(response
           .sort((a: any, b: any) => {
             return (
@@ -42,8 +41,6 @@ export const getConversations = (
             );
           })
           .map((conversation: any, idx: number) => {
-            console.log('Individual conversation from API:', conversation);
-            console.log('Available keys:', Object.keys(conversation));
             return { 
               text: conversation.title, 
               id: conversation.id || conversation.session_id || idx.toString(), // Use actual ID, fallback to session_id, then index
