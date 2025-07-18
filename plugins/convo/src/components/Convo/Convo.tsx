@@ -383,6 +383,7 @@ export const Convo = () => {
       done: false,
     };
     setConversation([...conversation, conversationEntry]);
+    setAssistantHasBeenSelected(true);
   };
 
   const ShowErrorMessage = () => {

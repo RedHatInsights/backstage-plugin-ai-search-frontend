@@ -24,11 +24,10 @@ export const WelcomeMessages: React.FC<{
   }, [show]);
 
   useEffect(() => {
-    if (welcomePrompts.length > 0) {
-      return;
+    if (show) {
+      setWelcomePrompts(getWelcomePrompts(sendMessageHandler));
     }
-    setWelcomePrompts(getWelcomePrompts(sendMessageHandler));
-  }, [welcomePrompts]);
+  }, [show, sendMessageHandler]);
 
   if (show && welcomePrompts.length > 0) {
     return (
