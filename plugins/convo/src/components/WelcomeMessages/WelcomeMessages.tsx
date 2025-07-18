@@ -1,26 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { getWelcomePrompts } from '../../lib/welcomePrompts';
 import ChatbotWelcomePrompt from '@patternfly/chatbot/dist/dynamic/ChatbotWelcomePrompt';
-import { useApi, identityApiRef } from '@backstage/core-plugin-api';
-import { useAsync } from 'react-use';
 import { makeStyles, useTheme } from '@material-ui/core';
 import { customStyles } from '../../lib/styles';
 
 export const WelcomeMessages: React.FC<{
   show: boolean;
   sendMessageHandler: (param: string) => void;
-}> = ({ show, sendMessageHandler }) => {
+  firstName?: string;
+}> = ({ show, sendMessageHandler, firstName }) => {
   const [welcomePrompts, setWelcomePrompts] = useState<any>([]);
-  const identityApi = useApi(identityApiRef);
 
   // CSS Overrides to make PF components look normal in Backstage
   const theme = useTheme();
   const useStyles = makeStyles(_theme => customStyles(theme));
   const classes = useStyles();
 
-  const { value: profile, loading: _profileLoading } = useAsync(
-    async () => await identityApi.getProfileInfo(),
-  );
 
   useEffect(() => {
     if (!show) {
@@ -29,13 +24,10 @@ export const WelcomeMessages: React.FC<{
   }, [show]);
 
   useEffect(() => {
-    if (welcomePrompts.length > 0) {
-      return;
+    if (show) {
+      setWelcomePrompts(getWelcomePrompts(sendMessageHandler));
     }
-    setWelcomePrompts(getWelcomePrompts(sendMessageHandler));
-  }, [welcomePrompts]);
-
-  const firstName = profile?.displayName?.split(' ')[0];
+  }, [show, sendMessageHandler]);
 
   if (show && welcomePrompts.length > 0) {
     return (

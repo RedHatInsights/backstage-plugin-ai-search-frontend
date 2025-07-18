@@ -2,6 +2,102 @@ const CLIENT = 'convo';
 
 // Public functions
 
+export const getConversations = (
+  backendUrl: string,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
+  setConversations: (data: any) => void,
+  setError: (error: boolean) => void,
+  setLoading: (loading: boolean) => void,
+  userId: string,
+) => {
+  const requestOptions = {
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    body: JSON.stringify({
+      user_id: userId || 'anonymous',
+    }),
+  };
+  fetchFunc(
+    `${backendUrl}/api/proxy/tangerine/api/conversations/list`,
+    requestOptions,
+  )
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(
+          `Server responded with ${response.status}: ${response.statusText}`,
+        );
+      }
+      return response.json();
+    })
+    .then(response => {
+      if (response.error) {
+        throw new Error(`Error: ${response.error}`);
+      }
+      setConversations(response
+          .sort((a: any, b: any) => {
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          })
+          .map((conversation: any, idx: number) => {
+            // Generate more stable fallback ID to avoid collisions
+            const fallbackId = `conversation_${conversation.session_id || Date.now()}_${idx}`;
+            return { 
+              text: conversation.title, 
+              id: conversation.id || conversation.session_id || fallbackId,
+              payload: conversation.payload.prevMsgs,
+              sessionId: conversation.session_id,
+              assistant_name: conversation.assistant_name
+            };
+          }),
+      );
+    })
+    .catch(error => {
+      setError(true);
+      setLoading(false);
+      console.error(
+        `Error fetching conversations from backend: ${error.message}`,
+      );
+    });
+};
+
+export const deleteConversation = (
+  backendUrl: string,
+  fetchFunc: (url: string, opts: any) => Promise<Response>,
+  userId: string,
+  sessionId: string,
+  callback: (response: any) => void,
+) => {
+  const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: userId,
+      sessionId: sessionId,
+    }),
+  };
+  fetchFunc(`${backendUrl}/api/proxy/tangerine/api/conversations/delete`, requestOptions)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(
+          `Server responded with ${response.status}: ${response.statusText}`,
+        );
+      }
+      return response.json();
+    })
+    .then(response => {
+      if (response.error) {
+        throw new Error(`Error: ${response.error}`);
+      }
+      callback(response);
+    })
+    .catch(error => {
+      console.error(`Error deleting conversation: ${error.message}`);
+      callback({ error: true });
+    });
+};
+
 export const sendFeedback = (
   backendUrl: string,
   fetchFunc: (url: string, opts: any) => Promise<Response>,
@@ -95,6 +191,7 @@ export const sendUserQuery = async (
   updateConversation: (text_content: string, search_metadata: any) => void,
   sessionId: string,
   abortSignal: AbortSignal,
+  userId: string,
 ) => {
   try {
     setLoading(true);
@@ -111,6 +208,7 @@ export const sendUserQuery = async (
       previousMessages,
       sessionId,
       abortSignal,
+      userId,
     );
     const reader = createStreamReader(response);
 
@@ -135,6 +233,7 @@ const sendQueryToServer = async (
   previousMessages: string,
   sessionId: string,
   abortSignal: AbortSignal,
+  userId: string,
 ) => {
   try {
     const response = await fetchFunc(
@@ -149,6 +248,7 @@ const sendQueryToServer = async (
           client: CLIENT,
           interactionId: crypto.randomUUID(),
           sessionId: sessionId,
+          user: userId || 'anonymous',
         }),
         cache: 'no-cache',
         signal: abortSignal,
