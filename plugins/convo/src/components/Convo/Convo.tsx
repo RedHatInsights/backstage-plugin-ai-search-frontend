@@ -211,7 +211,6 @@ export const Convo = () => {
           backendUrl,
           fetchApi.fetch,
           (rawConversations: ConversationItem[]) => {
-            console.log('Raw conversations received:', rawConversations);
             // Add menu items to each conversation
             const conversationsWithMenus = rawConversations.map((conv) => {
               return {
