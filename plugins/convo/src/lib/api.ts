@@ -41,9 +41,11 @@ export const getConversations = (
             );
           })
           .map((conversation: any, idx: number) => {
+            // Generate more stable fallback ID to avoid collisions
+            const fallbackId = `conversation_${conversation.session_id || Date.now()}_${idx}`;
             return { 
               text: conversation.title, 
-              id: conversation.id || conversation.session_id || idx.toString(), // Use actual ID, fallback to session_id, then index
+              id: conversation.id || conversation.session_id || fallbackId,
               payload: conversation.payload.prevMsgs,
               sessionId: conversation.session_id,
               assistant_name: conversation.assistant_name

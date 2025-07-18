@@ -88,6 +88,7 @@ export const Convo = () => {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [shouldRefreshConversations, setShouldRefreshConversations] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [pendingAssistantName, setPendingAssistantName] = useState<string>('');
   const abortControllerRef = useRef(new AbortController());
 
   const fetchApi = useApi(fetchApiRef);
@@ -95,7 +96,7 @@ export const Convo = () => {
   const catalogApi = useApi(catalogApiRef);
 
   // Create a stable delete handler to avoid recreating functions
-  const handleDeleteConversation = React.useCallback((conversationId: string, conversationSessionId: string) => {
+  const handleDeleteConversation = React.useCallback((conversationSessionId: string) => {
     
     if (!userId) {
       console.error('Cannot delete conversation: userId is not available');
@@ -106,7 +107,6 @@ export const Convo = () => {
       console.error('Cannot delete conversation: sessionId missing');
       return;
     }
-    
     
     // Call the delete API
     deleteConversation(
@@ -132,7 +132,7 @@ export const Convo = () => {
         }
       }
     );
-  }, [backendUrl, fetchApi.fetch, userId, sessionId]);
+  }, [backendUrl, fetchApi.fetch, userId]);
 
   useEffect(() => {
     const handleLinkClick = (event: Event) => {
@@ -166,8 +166,11 @@ export const Convo = () => {
     } else {
       setFirstName('');
     }
-    if (user?.metadata?.uid) {
-      setUserId(user?.spec?.profile?.email || 'unknown_user');
+    // Use email as userId if available, otherwise use uid, fallback to empty string
+    if (user?.spec?.profile?.email) {
+      setUserId(user.spec.profile.email);
+    } else if (user?.metadata?.uid) {
+      setUserId(user.metadata.uid);
     } else {
       setUserId('');
     }
@@ -203,6 +206,25 @@ export const Convo = () => {
     );
   }, [assistants, backendUrl, fetchApi.fetch]);
 
+  // Handle setting assistant when assistants load and there's a pending selection
+  useEffect(() => {
+    if (pendingAssistantName && assistants.length > 0) {
+      const matchingAssistant = assistants.find((assistant: any) => 
+        assistant.name === pendingAssistantName
+      );
+      
+      if (matchingAssistant) {
+        setSelectedAssistant(matchingAssistant);
+        setAssistantHasBeenSelected(true);
+        setPendingAssistantName(''); // Clear pending state
+        console.log('Set assistant from pending selection:', pendingAssistantName);
+      } else {
+        console.log('Pending assistant not found:', pendingAssistantName);
+        setPendingAssistantName(''); // Clear invalid pending state
+      }
+    }
+  }, [assistants, pendingAssistantName]);
+
     // Fetch conversations from the backend
   useEffect(() => {
     const fetchConversations = async () => {
@@ -223,7 +245,7 @@ export const Convo = () => {
                       event.preventDefault();
                       event.stopPropagation();
                       if (conv.sessionId) {
-                        handleDeleteConversation(conv.id, conv.sessionId);
+                        handleDeleteConversation(conv.sessionId);
                       } else {
                         console.error('Cannot delete conversation: sessionId is missing');
                       }
@@ -406,8 +428,6 @@ export const Convo = () => {
         />
       );
     }
-    if (loading && assistantsLoading) {
-    }
     return null;
   };
 
@@ -467,18 +487,29 @@ export const Convo = () => {
 
         // Set the correct assistant if available in the conversation data
         // Look for assistant_name in the conversation data (from the API response)
-        if (selectedConversation.assistant_name && assistants.length > 0) {
-          const matchingAssistant = assistants.find((assistant: any) => 
-            assistant.name === selectedConversation.assistant_name
-          );
-          
-          if (matchingAssistant) {
-            setSelectedAssistant(matchingAssistant);
-            setAssistantHasBeenSelected(true);
+        if (selectedConversation.assistant_name) {
+          // Wait for assistants to load if they haven't already
+          if (assistants.length > 0) {
+            const matchingAssistant = assistants.find((assistant: any) => 
+              assistant.name === selectedConversation.assistant_name
+            );
+            
+            if (matchingAssistant) {
+              setSelectedAssistant(matchingAssistant);
+              setAssistantHasBeenSelected(true);
+              setPendingAssistantName(''); // Clear any pending state
+            } else {
+              console.log('Assistant not found by name:', selectedConversation.assistant_name, 'using current assistant');
+              // Keep the currently selected assistant if the specific one isn't found
+            }
           } else {
-            console.log('Assistant not found by name:', selectedConversation.assistant_name, 'using current assistant');
-            // Keep the currently selected assistant if the specific one isn't found
+            // Assistants haven't loaded yet, set pending state to handle later
+            setPendingAssistantName(selectedConversation.assistant_name);
+            console.log('Assistants not loaded yet, setting pending assistant:', selectedConversation.assistant_name);
           }
+        } else {
+          // Clear any pending assistant state if no assistant specified
+          setPendingAssistantName('');
         }
       } else {
         console.log('Conversation not found for itemId:', itemId, 'conversations:', conversations);
@@ -506,8 +537,8 @@ export const Convo = () => {
           <ChatbotConversationHistoryNav
             isDrawerOpen={sidebarOpen}
             conversations={filteredConversations}
-            onDrawerToggle={() => {setSidebarOpen(!sidebarOpen)}}
-            setIsDrawerOpen={() => {setSidebarOpen(!sidebarOpen)}}
+            onDrawerToggle={() => setSidebarOpen(!sidebarOpen)}
+            setIsDrawerOpen={setSidebarOpen}
             onSelectActiveItem={handleConversationSelect}
             displayMode={ChatbotDisplayMode.default}
             handleTextInputChange={handleSearchInputChange}
@@ -542,6 +573,7 @@ export const Convo = () => {
                     show={showAssistantIntroduction}
                     sessionId={sessionId}
                     abortControllerRef={abortControllerRef}
+                    userId={userId}
                   />
                   <Conversation
                     conversation={conversation}

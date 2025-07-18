@@ -35,7 +35,8 @@ export const AssistantIntroduction: React.FC<{
   show: boolean;
   sessionId: string;
   abortControllerRef: React.MutableRefObject<AbortController>;
-}> = ({ assistant, backendUrl, assistantHasBeenSelected, show, sessionId, abortControllerRef }) => {
+  userId: string;
+}> = ({ assistant, backendUrl, assistantHasBeenSelected, show, sessionId, abortControllerRef, userId }) => {
   const [llmResponse, setLlmResponse] = React.useState<string>('👋');
   const [loading, setLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<boolean>(false);
@@ -75,7 +76,8 @@ export const AssistantIntroduction: React.FC<{
         noop,
         updateResponse,
         sessionId,
-        abortControllerRef.current.signal
+        abortControllerRef.current.signal,
+        userId
       );
     } catch (error) {
       console.error('Error fetching assistant introduction:', error);
