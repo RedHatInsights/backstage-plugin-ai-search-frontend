@@ -387,7 +387,7 @@ export const Convo = () => {
     console.error(error.message);
   };
 
-  const sendMessageHandler = (msg: string) => {
+  const sendMessageHandler = React.useCallback((msg: string) => {
     console.log('sendMessageHandler called with msg:', msg);
     // Guard against sending messages when assistants are still loading
     if (assistantsLoading || !selectedAssistant.id) {
@@ -402,7 +402,7 @@ export const Convo = () => {
     };
     setConversation([...conversation, conversationEntry]);
     setAssistantHasBeenSelected(true);
-  };
+  }, [assistantsLoading, selectedAssistant.id, conversation]);
 
   const ShowErrorMessage = () => {
     if (error) {
