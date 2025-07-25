@@ -78,7 +78,7 @@ export const AssistantIntroduction: React.FC<{
         sessionId,
         abortControllerRef.current.signal,
         userId,
-        true // isIntroductionPrompt
+        IS_INTRODUCTION_PROMPT
       );
     } catch (error) {
       console.error('Error fetching assistant introduction:', error);
