@@ -192,6 +192,7 @@ export const sendUserQuery = async (
   sessionId: string,
   abortSignal: AbortSignal,
   userId: string,
+  isIntroductionPrompt?: boolean,
 ) => {
   try {
     setLoading(true);
@@ -209,6 +210,7 @@ export const sendUserQuery = async (
       sessionId,
       abortSignal,
       userId,
+      isIntroductionPrompt,
     );
     const reader = createStreamReader(response);
 
@@ -234,6 +236,7 @@ const sendQueryToServer = async (
   sessionId: string,
   abortSignal: AbortSignal,
   userId: string,
+  isIntroductionPrompt?: boolean,
 ) => {
   try {
     const response = await fetchFunc(
@@ -249,6 +252,7 @@ const sendQueryToServer = async (
           interactionId: crypto.randomUUID(),
           sessionId: sessionId,
           user: userId || 'anonymous',
+          ...(isIntroductionPrompt && { isIntroductionPrompt: true }),
         }),
         cache: 'no-cache',
         signal: abortSignal,
