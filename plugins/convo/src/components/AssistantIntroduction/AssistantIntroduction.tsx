@@ -6,6 +6,8 @@ import ConvoAvatar from '../../../static/robot.svg';
 import { humanizeAssistantName } from '../../lib/helpers';
 import { fetchApiRef, useApi } from '@backstage/core-plugin-api';
 
+const IS_INTRODUCTION_PROMPT = true;
+
 const AssistantIntroductionMessage: React.FC<{
   text: string;
   assistant: any;
