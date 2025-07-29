@@ -35,10 +35,10 @@ export const getConversations = (
       }
       setConversations(response
           .sort((a: any, b: any) => {
-            return (
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-            );
+            // Use updated_at if available, otherwise fall back to created_at
+            const aDate = new Date(a.updated_at || a.created_at || new Date(0)).getTime();
+            const bDate = new Date(b.updated_at || b.created_at || new Date(0)).getTime();
+            return bDate - aDate;
           })
           .map((conversation: any, idx: number) => {
             // Generate more stable fallback ID to avoid collisions
