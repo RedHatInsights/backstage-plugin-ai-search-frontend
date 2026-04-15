@@ -38,7 +38,7 @@
     "@patternfly/react-core": "^6",
     "@patternfly/react-styles": "^6",
     "mui-markdown": "^1.2.1",
-    "react-markdown": "^9.0.1",
+    "react-markdown": "^10.1.0",
     "react-use": "^17.2.4"
   },
   "peerDependencies": {
