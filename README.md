@@ -3,7 +3,9 @@
 This is a frontend plugin that provides a conversational AI search interface that talks to [Tangerine](https://github.com/RedHatInsights/tangerine-backend).
 
 ## Development
+
 Before starting:
+
 * Make sure you are using Node 18
 * Run `yarn install`
 * You'll need the URL for your tangerine server as well as the OAuth token exported as environment variables:
@@ -39,6 +41,7 @@ proxy:
 ### Dynamic Plugin Config
 
 Add this to the dynmaic plugins config file
+
 ```yaml
     - package: "https://github.com/RedHatInsights/backstage-plugin-convo-frontend/releases/download/v0.2.9/redhatinsights-backstage-plugin-convo-frontend-dynamic-0.2.9.tgz"
       disabled: false
@@ -59,4 +62,3 @@ Add this to the dynmaic plugins config file
 ### Build the Dynamic Plugin
 
 Run `./build` - the packed tarball for the release along with its integrity sha will be generated.
-
