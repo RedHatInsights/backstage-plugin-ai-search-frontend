@@ -21,7 +21,7 @@
     "lint:all": "backstage-cli repo lint",
     "prettier:check": "prettier --check .",
     "new": "backstage-cli new",
-    "export-dynamic:convo": "yarn workspace @redhatinsights/backstage-plugin-convo-frontend run build && yarn workspace @redhatinsights/backstage-plugin-convo-frontend run export-dynamic"
+    "build:dynamic": "./build.sh @redhatinsights/backstage-plugin-convo-frontend convo"
   },
   "workspaces": {
     "packages": [
@@ -55,5 +55,5 @@
       "prettier --write"
     ]
   },
-  "packageManager": "yarn@4.4.1"
+  "packageManager": "yarn@4.16.0"
 }
