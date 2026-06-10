@@ -2649,6 +2649,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.29.2":
+  version: 7.29.7
+  resolution: "@babel/runtime@npm:7.29.7"
+  checksum: 10c0/ca11572f7146b21e0bde6a9ed4bb6a89eafbee5f0944c7eb54d0d8a2dac962c33638a1d611e14faa71dfbb92b4b5f9236232208568a6b7d5c6f3f39ddb91771e
+  languageName: node
+  linkType: hard
+
 "@babel/template@npm:^7.28.6":
   version: 7.28.6
   resolution: "@babel/template@npm:7.28.6"
@@ -8609,19 +8616,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/icons-material@npm:^5.16.7":
-  version: 5.18.0
-  resolution: "@mui/icons-material@npm:5.18.0"
+"@mui/icons-material@npm:^9.1.0":
+  version: 9.1.0
+  resolution: "@mui/icons-material@npm:9.1.0"
   dependencies:
-    "@babel/runtime": "npm:^7.23.9"
+    "@babel/runtime": "npm:^7.29.2"
   peerDependencies:
-    "@mui/material": ^5.0.0
+    "@mui/material": ^9.1.0
     "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
     react: ^17.0.0 || ^18.0.0 || ^19.0.0
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 10c0/4fc61ea1b8ff276c8545b4f4f3881d9be590af24d8c2cbb076b34ec9a9230fd3147c30dd12399133c8d99c9eb748bd73014fa29b187b94229b90783023af4482
+  checksum: 10c0/188247a61ff0edd79b55cc4178a35c42111e2c7b06504d85d3e5b2b5ae269fddc6e30512f2a7d02684cd3de657e53d502de914a3acceaf65d765bcec1feecfbb
   languageName: node
   linkType: hard
 
@@ -12013,7 +12020,7 @@ __metadata:
     "@material-ui/core": "npm:^4.9.13"
     "@material-ui/icons": "npm:^4.9.1"
     "@material-ui/lab": "npm:4.0.0-alpha.61"
-    "@mui/icons-material": "npm:^5.16.7"
+    "@mui/icons-material": "npm:^9.1.0"
     "@mui/material": "npm:^5.16.7"
     "@patternfly/chatbot": "npm:2.1.0"
     "@patternfly/patternfly": "npm:^6"
