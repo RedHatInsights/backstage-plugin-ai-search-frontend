@@ -48,16 +48,22 @@ proxy:
 
 ### Dynamic Plugin Configuration
 
+Add this to the dynamic plugins config file:
+
 ```yaml
-dynamicPlugins:
-  frontend:
-    redhatinsights.backstage-plugin-convo-frontend:
-      dynamicRoutes:
-        - path: /convo
-          importName: AISearchFrontendPage
-          menuItem:
-            icon: 'chat'
-            text: "Convo: AI Search"
+    - package: "https://github.com/RedHatInsights/backstage-plugin-convo-frontend/releases/download/v0.2.9/redhatinsights-backstage-plugin-convo-frontend-dynamic-0.2.9.tgz"
+      disabled: false
+      integrity: "sha256-2lwrT6OIXWCaNFsR+Ns6T5MDWRmYUSGW8VpyeWwPLtU="
+      pluginConfig:
+        dynamicPlugins:
+          frontend:
+            redhatinsights.backstage-plugin-convo-frontend:
+              dynamicRoutes:
+                - path: /convo
+                  importName: AISearchFrontendPage
+                  menuItem:
+                    icon: 'chat'
+                    text: "Convo: AI Search"
 ```
 
 ## Testing
