@@ -1,33 +1,41 @@
 # Convo AI Search Assistant Plugin
 
-This is a frontend plugin that provides a conversational AI search interface that talks to [Tangerine](https://github.com/RedHatInsights/tangerine-backend).
+A Backstage frontend plugin that provides a conversational AI search interface powered by
+[Tangerine][tangerine-backend]. Built as a dynamic plugin for Red Hat Developer Hub (RHDH).
 
-## Development
+## Prerequisites
 
-Before starting:
+- Node.js 22+ and Yarn
+- Tangerine server URL and OAuth token
 
-* Make sure you are using Node 18
-* Run `yarn install`
-* You'll need the URL for your tangerine server as well as the OAuth token exported as environment variables:
+## Development Setup
 
 ```sh
+# Install dependencies
+yarn install
+
+# Set required environment variables
 export TANGERINE_CLUSTER_URL="tangerine.mycompany.com"
-export TANGERINE_CLUSTER_API_TOKEN="DEADBEEFDEADBEEFDEADBEEFDEADBEEF"
+export TANGERINE_CLUSTER_API_TOKEN="<your-token>"
+
+# Start the dev server (localhost:3000)
+yarn start
 ```
 
-With all of that in place you can start the dev server:
+## Building the Dynamic Plugin
 
 ```sh
-yarn dev
+# Build and package the dynamic plugin tarball
+./build.sh
 ```
 
-The app will be running on `localhost:3000`
+The script produces a tarball with an integrity SHA for deployment.
 
-## Deploy to RHDH
+## Deploying to RHDH
 
-### Proxy Config
+### Proxy Configuration
 
-In `app-config.yaml` first add the proxy:
+Add to `app-config.yaml`:
 
 ```yaml
 proxy:
@@ -35,12 +43,12 @@ proxy:
     '/tangerine':
       target: "tangerine.mycompany.com"
       headers:
-        Authorization: "Bearer DEADBEEFDEADBEEFDEADBEEFDEADBEEF"
+        Authorization: "Bearer <your-token>"
 ```
 
-### Dynamic Plugin Config
+### Dynamic Plugin Configuration
 
-Add this to the dynmaic plugins config file
+Add this to the dynamic plugins config file:
 
 ```yaml
     - package: "https://github.com/RedHatInsights/backstage-plugin-convo-frontend/releases/download/v0.2.9/redhatinsights-backstage-plugin-convo-frontend-dynamic-0.2.9.tgz"
@@ -56,9 +64,36 @@ Add this to the dynmaic plugins config file
                   menuItem:
                     icon: 'chat'
                     text: "Convo: AI Search"
-
 ```
 
-### Build the Dynamic Plugin
+## Testing
 
-Run `./build` - the packed tarball for the release along with its integrity sha will be generated.
+```sh
+# Run unit tests
+yarn test
+
+# Run all tests with coverage
+yarn test:all
+
+# Run end-to-end tests
+yarn test:e2e
+
+# Type checking
+yarn tsc
+
+# Lint
+yarn lint
+```
+
+## CI/CD
+
+GitHub Actions workflows:
+
+- `release.yml` — automated release pipeline
+- `test.yml` — test and lint on pull requests
+
+## License
+
+No license file is included in this repository.
+
+[tangerine-backend]: https://github.com/RedHatInsights/tangerine-backend
