@@ -32,7 +32,7 @@
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "4.0.0-alpha.61",
     "@mui/icons-material": "^5.16.7",
-    "@mui/material": "^5.16.7",
+    "@mui/material": "^9.2.0",
     "@patternfly/chatbot": "2.1.0",
     "@patternfly/patternfly": "^6",
     "@patternfly/react-core": "^6",
